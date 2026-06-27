@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "types:gen": "npx supabase gen types typescript --project-id iyacqcstrbdzucjybjdc > src/types/database.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
