@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.output/
+
+# Environment variables (ห้าม commit!)
+.env
+.env.local
+.env.*.local
+
+# Vite
+apps/web/.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Generated types (regenerate ด้วย supabase gen types)
+apps/web/src/types/database.ts

@@ -1,0 +1,31 @@
+{
+  "name": "auto-parts",
+  "version": "0.1.0",
+  "description": "เว็บไซต์ขายอะไหล่รถยนต์ — Catalog + Inquiry (Phase 1)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix apps/web run dev",
+    "build": "npm --prefix apps/web run build",
+    "typecheck": "npm --prefix apps/web run typecheck",
+    "lint": "npm --prefix apps/web run lint",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goofteen/Siriweb.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8"
+  },
+  "lint-staged": {
+    "apps/web/src/**/*.{ts,tsx}": [
+      "npm --prefix apps/web run lint"
+    ],
+    "apps/web/src/**/*.{ts,tsx,css,json}": [
+      "npm --prefix apps/web run format:check"
+    ]
+  }
+}

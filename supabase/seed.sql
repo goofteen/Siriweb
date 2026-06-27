@@ -1,0 +1,3 @@
+-- seed.sql — ข้อมูลตัวอย่างสำหรับ Phase 0 (ยังไม่มี tables จริง)
+-- Sprint 1 จะเพิ่ม seed data จริงสำหรับ vehicles + products
+-- ดู docs/04-DATABASE-SCHEMA.md และ docs/06-ROADMAP.md (Sprint 1)
