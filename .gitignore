@@ -40,6 +40,3 @@ pnpm-debug.log*
 # Supabase local
 supabase/.temp/
 supabase/.branches/
-
-# Generated types (regenerate ด้วย supabase gen types)
-apps/web/src/types/database.ts

@@ -38,12 +38,12 @@ export interface SearchResponse {
 export async function smartSearch(params: SearchParams): Promise<SearchResponse> {
   const {
     query,
-    vehicleId = null,
-    categoryId = null,
-    brand = null,
-    minPrice = null,
-    maxPrice = null,
-    inStock = null,
+    vehicleId,
+    categoryId,
+    brand,
+    minPrice,
+    maxPrice,
+    inStock,
     limit = 20,
     offset = 0,
   } = params
@@ -52,12 +52,12 @@ export async function smartSearch(params: SearchParams): Promise<SearchResponse>
 
   const { data, error } = await supabase.rpc('smart_search', {
     p_query: query,
-    p_vehicle_id: vehicleId,
-    p_category_id: categoryId,
-    p_brand: brand,
-    p_min_price: minPrice,
-    p_max_price: maxPrice,
-    p_in_stock: inStock,
+    p_vehicle_id: vehicleId ?? undefined,
+    p_category_id: categoryId ?? undefined,
+    p_brand: brand ?? undefined,
+    p_min_price: minPrice ?? undefined,
+    p_max_price: maxPrice ?? undefined,
+    p_in_stock: inStock ?? undefined,
     p_limit: limit,
     p_offset: offset,
   })
@@ -67,7 +67,7 @@ export async function smartSearch(params: SearchParams): Promise<SearchResponse>
   const took_ms = Date.now() - start
 
   // log ผลการค้นหาแบบ fire-and-forget (ไม่ block response)
-  logSearch(query, (data as SearchResult[])?.length ?? 0, vehicleId).catch(
+  logSearch(query, (data as SearchResult[])?.length ?? 0, vehicleId ?? undefined).catch(
     () => void 0 // ไม่ throw ถ้า log ล้มเหลว
   )
 
@@ -106,12 +106,12 @@ export async function searchSuggestions(
 async function logSearch(
   query: string,
   resultsCount: number,
-  vehicleId: number | null
+  vehicleId: number | undefined
 ): Promise<void> {
   await supabase.from('search_logs').insert({
     query,
     results_count: resultsCount,
-    vehicle_filter: vehicleId,
+    vehicle_filter: vehicleId ?? null,
     // session_id จะเพิ่มใน Phase 1 Sprint 2 เมื่อมี SessionContext
   })
 }
