@@ -189,7 +189,7 @@ export default function SearchPage() {
               )}
 
               {/* compact VehicleSelector — brand → model → year แบบ vertical */}
-              <VehicleSelector onSelect={(id) => handleSidebarVehicleSelect(id)} />
+              <VehicleSelector vertical onSelect={(id) => handleSidebarVehicleSelect(id)} />
             </div>
 
             <div className="border-t border-border" />

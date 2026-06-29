@@ -16,9 +16,11 @@ import { BrandLogo } from './BrandLogo'
 interface VehicleSelectorProps {
   onSelect: (vehicleId: number, info: { brand: string; model: string; year: number }) => void
   className?: string
+  /** stack dropdowns vertically instead of 3-column grid */
+  vertical?: boolean
 }
 
-export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
+export function VehicleSelector({ onSelect, className, vertical = false }: VehicleSelectorProps) {
   const [brand, setBrand] = useState<string | null>(null)
   const [model, setModel] = useState<string | null>(null)
 
@@ -44,7 +46,7 @@ export function VehicleSelector({ onSelect, className }: VehicleSelectorProps) {
 
   return (
     <div className={className}>
-      <div className="grid grid-cols-3 gap-2">
+      <div className={vertical ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-2'}>
         {/* ยี่ห้อ */}
         <Select
           value={brand ?? ''}
