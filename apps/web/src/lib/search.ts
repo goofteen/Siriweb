@@ -80,7 +80,8 @@ export async function smartSearch(params: SearchParams): Promise<SearchResponse>
 
 /**
  * searchSuggestions — autocomplete สำหรับ dropdown (เร็วกว่า full search)
- * ใช้ trigram similarity ตรงๆ บน searchable_text
+ * ใช้ ILIKE แทน FTS เพราะ FTS ไม่รองรับ prefix match ภาษาไทย
+ * เช่น "ผ้าเบรก" ต้อง match "ผ้าเบรกหน้า..." ได้
  */
 export async function searchSuggestions(
   query: string,
@@ -91,7 +92,7 @@ export async function searchSuggestions(
   const { data, error } = await supabase
     .from('products')
     .select('name_th, brand')
-    .textSearch('searchable_text', query, { type: 'websearch', config: 'simple' })
+    .ilike('name_th', `%${query.trim()}%`)
     .eq('is_active', true)
     .limit(limit)
 
