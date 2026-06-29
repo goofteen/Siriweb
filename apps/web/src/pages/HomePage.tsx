@@ -33,18 +33,26 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-2xl">
       {/* hero banner */}
-      <div className="relative overflow-hidden">
-        <img src={heroPng} alt="อะไหล่รถยนต์ญี่ปุ่น" className="h-56 w-full object-cover" />
-        {/* dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+      <div className="relative">
+        <div className="overflow-hidden">
+          <img src={heroPng} alt="อะไหล่รถยนต์ญี่ปุ่น" className="h-48 w-full object-cover" />
+          <div className="absolute inset-0 h-48 bg-gradient-to-b from-black/50 via-black/35 to-black/60" />
+          {/* text sits in top portion, clear of the search overlap */}
+          <div className="absolute inset-x-0 top-0 flex flex-col justify-center px-4 pt-7 pb-2">
+            <h1 className="text-2xl font-bold tracking-tight text-white drop-shadow-sm">
+              อะไหล่รถยนต์ญี่ปุ่น
+            </h1>
+            <p className="mt-0.5 text-sm text-white/75">
+              ค้นหาด้วยรุ่นรถ ชื่อสินค้า หรือรหัสอะไหล่
+            </p>
+          </div>
+        </div>
 
-        {/* hero content overlaid on image */}
-        <div className="absolute inset-0 flex flex-col justify-end px-4 pb-5 pt-8">
-          <h1 className="mb-1 text-3xl font-bold tracking-tight text-white drop-shadow">
-            อะไหล่รถยนต์ญี่ปุ่น
-          </h1>
-          <p className="mb-4 text-sm text-white/80">ค้นหาด้วยรุ่นรถ ชื่อสินค้า หรือรหัสอะไหล่</p>
-          <SmartSearchBox className="mb-0" />
+        {/* search box overlaps hero bottom — floats on white card */}
+        <div className="px-4">
+          <div className="-mt-5 rounded-2xl border border-border bg-background px-3 py-3 shadow-md">
+            <SmartSearchBox />
+          </div>
         </div>
       </div>
 
