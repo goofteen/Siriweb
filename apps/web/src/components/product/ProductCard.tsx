@@ -39,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
     primaryVehicle !== null && (product.vehicleIds?.includes(primaryVehicle.id) ?? false)
 
   return (
-    <div className="group relative rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
+    <div className="group relative rounded-xl border border-border bg-card transition-all hover:border-l-2 hover:border-l-accent hover:shadow-md">
       {/* wishlist button */}
       <button
         onClick={(e) => {
@@ -87,7 +87,10 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* badges */}
           <div className="mb-1.5 flex flex-wrap gap-1">
             {fitsMyVehicle && (
-              <Badge variant="default" className="bg-green-600 text-xs hover:bg-green-700">
+              <Badge
+                variant="default"
+                className="bg-accent text-xs text-accent-foreground hover:bg-accent/90"
+              >
                 ใช้กับรถคุณได้
               </Badge>
             )}
@@ -99,12 +102,16 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* ชื่อสินค้า */}
-          <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">
+          <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
             {product.name_th}
           </p>
 
           {/* ยี่ห้อ */}
-          {product.brand && <p className="mt-0.5 text-xs text-muted-foreground">{product.brand}</p>}
+          {product.brand && (
+            <p className="mt-0.5 text-xs uppercase tracking-wide text-muted-foreground">
+              {product.brand}
+            </p>
+          )}
 
           {/* ราคา */}
           <p className="mt-2 text-base font-bold text-primary">

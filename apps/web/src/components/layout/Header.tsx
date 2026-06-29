@@ -27,11 +27,11 @@ export function Header({ hideSearchIcon = false }: HeaderProps) {
             <Link
               to="/garage"
               className={cn(
-                'flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1',
-                'text-xs font-medium text-green-800 transition-colors hover:bg-green-100'
+                'flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1',
+                'text-xs font-medium text-foreground transition-colors hover:bg-accent/20'
               )}
             >
-              <span className="size-1.5 rounded-full bg-green-500" />
+              <span className="size-1.5 rounded-full bg-accent" />
               {primaryVehicle.brand} {primaryVehicle.model}
             </Link>
           )}

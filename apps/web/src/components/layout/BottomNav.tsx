@@ -26,7 +26,7 @@ export function BottomNav() {
             className={({ isActive }) =>
               cn(
                 'relative flex min-h-[56px] min-w-[56px] flex-col items-center justify-center gap-0.5 px-3 py-2 text-xs transition-colors',
-                isActive ? 'text-primary' : 'text-muted-foreground'
+                isActive ? 'text-accent' : 'text-muted-foreground'
               )
             }
           >
@@ -40,7 +40,7 @@ export function BottomNav() {
               )}
               {/* badge: garage has vehicles */}
               {to === '/garage' && garageVehicles.length > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 size-2 rounded-full bg-green-500" />
+                <span className="absolute -right-1.5 -top-1.5 size-2 rounded-full bg-accent" />
               )}
             </div>
             <span>{label}</span>
