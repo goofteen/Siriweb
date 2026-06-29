@@ -9,6 +9,7 @@ const CategoryPage = lazy(() => import('./pages/CategoryPage'))
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'))
 const GaragePage = lazy(() => import('./pages/GaragePage'))
 const WishlistPage = lazy(() => import('./pages/WishlistPage'))
+const InquiryPage = lazy(() => import('./pages/InquiryPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 function PageLoader() {
@@ -30,6 +31,7 @@ function App() {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/garage" element={<GaragePage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/inquiry" element={<InquiryPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

@@ -126,5 +126,13 @@
   }
   html {
     @apply font-sans;
+    /* ใช้ IBM Plex Sans Thai เป็น Thai fallback — รองรับ Thai rendering ดีกว่า system font */
+    font-family: 'IBM Plex Sans Thai', 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  }
+  /* ป้องกัน iOS zoom เมื่อ focus input */
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
   }
 }

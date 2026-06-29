@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { SessionProvider } from '@/contexts/SessionContext'
 import { GarageProvider } from '@/contexts/GarageContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
@@ -23,13 +24,15 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <SessionProvider>
-          <GarageProvider>
-            <WishlistProvider>
-              <App />
-            </WishlistProvider>
-          </GarageProvider>
-        </SessionProvider>
+        <ErrorBoundary>
+          <SessionProvider>
+            <GarageProvider>
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
+            </GarageProvider>
+          </SessionProvider>
+        </ErrorBoundary>
       </QueryClientProvider>
     </BrowserRouter>
   </StrictMode>

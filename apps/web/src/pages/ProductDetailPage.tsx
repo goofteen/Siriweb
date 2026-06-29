@@ -1,24 +1,27 @@
 import { useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { ChevronRight, Heart, Car, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ContactStoreSheet } from '@/components/inquiry/ContactStoreButton'
 import { useProductDetail } from '@/hooks/useProducts'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useGarage } from '@/contexts/GarageContext'
 import { cn } from '@/lib/utils'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const productId = id ? Number(id) : undefined
 
   const { data: product, isLoading, error } = useProductDetail(productId)
   const { toggleWishlist, isInWishlist } = useWishlist()
   const { primaryVehicle } = useGarage()
 
+  usePageTitle(product?.name_th)
   const [activeImageIdx, setActiveImageIdx] = useState(0)
+  const [contactOpen, setContactOpen] = useState(false)
 
   if (isLoading) return <ProductDetailSkeleton />
 
@@ -191,15 +194,18 @@ export default function ProductDetailPage() {
           >
             <Heart className={cn('size-5', inWishlist && 'fill-primary text-primary')} />
           </Button>
-          <Button
-            className="flex-1"
-            onClick={() => navigate(`/inquiry?product=${product.id}`)}
-            disabled={!inStock}
-          >
+          <Button className="flex-1" onClick={() => setContactOpen(true)} disabled={!inStock}>
             {inStock ? 'ติดต่อสั่งซื้อ' : 'สินค้าหมดชั่วคราว'}
           </Button>
         </div>
       </div>
+
+      <ContactStoreSheet
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        productId={product.id}
+        productName={product.name_th}
+      />
     </div>
   )
 }

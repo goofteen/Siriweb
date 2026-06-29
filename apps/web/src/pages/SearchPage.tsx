@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { SmartSearchBox } from '@/components/search/SmartSearchBox'
 import { FilterChips, type ActiveFilter } from '@/components/filter/FilterChips'
 import { FilterDrawer, type FilterState } from '@/components/filter/FilterDrawer'
@@ -13,8 +14,9 @@ import { useSmartSearch } from '@/hooks/useProducts'
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [filterOpen, setFilterOpen] = useState(false)
-
   const q = searchParams.get('q') ?? ''
+  usePageTitle(q ? `ค้นหา "${q}"` : 'ค้นหาสินค้า')
+
   const vehicleId = searchParams.get('vehicle') ? Number(searchParams.get('vehicle')) : undefined
   const categoryId = searchParams.get('category') ? Number(searchParams.get('category')) : undefined
   const brand = searchParams.get('brand') ?? undefined

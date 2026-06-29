@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Car } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { SmartSearchBox } from '@/components/search/SmartSearchBox'
 import { VehicleSelector } from '@/components/vehicle/VehicleSelector'
 import { ProductGrid } from '@/components/product/ProductGrid'
@@ -8,6 +9,7 @@ import { usePopularProducts } from '@/hooks/useProducts'
 import { useGarage } from '@/contexts/GarageContext'
 
 export default function HomePage() {
+  usePageTitle()
   const navigate = useNavigate()
   const { addVehicle, primaryVehicle } = useGarage()
   const { data: categories = [] } = useCategories()

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Heart, Trash2 } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useQuery } from '@tanstack/react-query'
@@ -7,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import type { ProductCardData } from '@/components/product/ProductCard'
 
 export default function WishlistPage() {
+  usePageTitle('รายการโปรด')
   const { items, isLoading: wishlistLoading, removeFromWishlist } = useWishlist()
 
   // ดึงข้อมูลสินค้าจาก IDs ที่อยู่ใน wishlist

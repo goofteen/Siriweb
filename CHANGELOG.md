@@ -1,5 +1,42 @@
 # Changelog
 
+## [Unreleased] — Phase 1 Sprint 3
+
+### Added
+- Inquiry flow — ติดต่อสั่งซื้อ 3 ช่องทาง: Line OA / โทร / ฟอร์ม (`ContactStoreSheet`)
+- `InquiryPage` (`/inquiry`) — ฟอร์มบันทึกลง Supabase `inquiries` table (ไม่มี email noti ตาม scope)
+- `store.ts` config — ข้อมูลร้าน (phone, Line OA) แก้ไขได้ที่เดียว
+- `ErrorBoundary` — React error boundary ครอบ app ทั้งหมด
+- `usePageTitle` hook — dynamic `<title>` ตาม route
+- `index.html` — Thai language, SEO meta, OG tags, IBM Plex Sans Thai font
+- `robots.txt` + `sitemap.xml` (static, ขยาย dynamic ได้ใน Phase 2)
+- iOS auto-zoom fix: `font-size: max(16px, 1em)` บน input/textarea/select
+
+### Changed
+- ProductDetailPage: "ติดต่อสั่งซื้อ" เปิด `ContactStoreSheet` แทน navigate ตรง
+
+### Decisions
+- Email notification ตัดออกจาก Sprint 3 scope (ทำใน Phase 2)
+
+---
+
+## [Unreleased] — Phase 1 Sprint 2
+
+### Added
+- Pages (code-split): Home, Search, Category, ProductDetail, Garage, Wishlist, 404
+- SmartSearchBox: debounce 300ms + autocomplete dropdown + keyboard navigation
+- VehicleSelector: cascade Select ยี่ห้อ → รุ่น → ปี
+- FilterChips + FilterDrawer: active filter chips + bottom sheet filter
+- ProductCard + ProductGrid + Skeleton variants
+- AppLayout + Header (vehicle chip) + BottomNav (4 tabs + badges)
+- SessionContext: session ID ใน localStorage 30 วัน
+- GarageContext: garage ใน localStorage 30 วัน (primary = index 0)
+- WishlistContext: Supabase wishlist_items + optimistic UI
+- TanStack Query hooks: useVehicles, useCategories, useProducts, useProductDetail
+- shadcn components: badge, skeleton, input, select, sheet
+
+---
+
 ## [Unreleased] — Phase 1 Sprint 1
 
 ### Added

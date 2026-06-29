@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Car, Plus, Trash2, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { VehicleSelector } from '@/components/vehicle/VehicleSelector'
@@ -7,6 +8,7 @@ import { useGarage, type GarageVehicle } from '@/contexts/GarageContext'
 import { cn } from '@/lib/utils'
 
 export default function GaragePage() {
+  usePageTitle('รถของฉัน')
   const navigate = useNavigate()
   const { vehicles, primaryVehicle, addVehicle, removeVehicle, setPrimary } = useGarage()
   const [showSelector, setShowSelector] = useState(false)

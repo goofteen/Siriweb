@@ -1,0 +1,101 @@
+/**
+ * ContactStoreButton — ปุ่ม "ติดต่อสั่งซื้อ" บนหน้าสินค้า
+ * เปิด bottom sheet ให้เลือก 3 ช่องทาง: Line OA / โทร / ฟอร์ม
+ */
+import { Phone, MessageCircle, ClipboardList } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { STORE } from '@/config/store'
+
+interface ContactStoreButtonProps {
+  open: boolean
+  onClose: () => void
+  productId?: number
+  productName?: string
+}
+
+export function ContactStoreSheet({
+  open,
+  onClose,
+  productId,
+  productName,
+}: ContactStoreButtonProps) {
+  const navigate = useNavigate()
+
+  const lineUrl = productName
+    ? `${STORE.lineOaUrl}?text=${encodeURIComponent(`สอบถามสินค้า: ${productName}`)}`
+    : STORE.lineOaUrl
+
+  const options = [
+    {
+      icon: MessageCircle,
+      label: 'Line OA',
+      sublabel: STORE.lineOaId,
+      color: 'bg-[#06C755] hover:bg-[#05b34d]',
+      textColor: 'text-white',
+      action: () => {
+        window.open(lineUrl, '_blank', 'noopener,noreferrer')
+        onClose()
+      },
+    },
+    {
+      icon: Phone,
+      label: 'โทรหาร้าน',
+      sublabel: STORE.phone,
+      color: 'bg-blue-500 hover:bg-blue-600',
+      textColor: 'text-white',
+      action: () => {
+        window.location.href = `tel:${STORE.phone.replace(/[-\s]/g, '')}`
+        onClose()
+      },
+    },
+    {
+      icon: ClipboardList,
+      label: 'กรอกแบบฟอร์ม',
+      sublabel: 'ส่งคำขอเพื่อให้ร้านติดต่อกลับ',
+      color: 'bg-background hover:bg-accent border border-border',
+      textColor: 'text-foreground',
+      action: () => {
+        onClose()
+        const params = new URLSearchParams()
+        if (productId) params.set('product', String(productId))
+        navigate(`/inquiry?${params.toString()}`)
+      },
+    },
+  ]
+
+  return (
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+        <SheetHeader className="pb-4">
+          <SheetTitle className="text-left text-lg">ติดต่อสั่งซื้อ</SheetTitle>
+          {productName && (
+            <p className="text-left text-sm text-muted-foreground">สำหรับ: {productName}</p>
+          )}
+        </SheetHeader>
+
+        <div className="space-y-3">
+          {options.map(({ icon: Icon, label, sublabel, color, textColor, action }) => (
+            <button
+              key={label}
+              onClick={action}
+              className={`flex w-full items-center gap-4 rounded-xl px-4 py-3.5 text-left transition-colors ${color} ${textColor}`}
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20">
+                <Icon className="size-5" />
+              </div>
+              <div>
+                <p className="font-semibold">{label}</p>
+                <p
+                  className={`text-sm ${textColor === 'text-white' ? 'text-white/80' : 'text-muted-foreground'}`}
+                >
+                  {sublabel}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
