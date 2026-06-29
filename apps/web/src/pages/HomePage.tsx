@@ -50,7 +50,7 @@ export default function HomePage() {
 
         {/* search box overlaps hero bottom — floats on white card */}
         <div className="px-4">
-          <div className="-mt-5 rounded-2xl border border-border bg-background px-3 py-3 shadow-md">
+          <div className="-mt-5 rounded-2xl border border-border bg-card px-3 py-3 shadow-md">
             <SmartSearchBox />
           </div>
         </div>
