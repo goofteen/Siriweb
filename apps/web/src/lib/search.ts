@@ -79,25 +79,55 @@ export async function smartSearch(params: SearchParams): Promise<SearchResponse>
 }
 
 /**
- * searchSuggestions — autocomplete สำหรับ dropdown (เร็วกว่า full search)
- * ใช้ ILIKE แทน FTS เพราะ FTS ไม่รองรับ prefix match ภาษาไทย
- * เช่น "ผ้าเบรก" ต้อง match "ผ้าเบรกหน้า..." ได้
+ * searchSuggestions — autocomplete สำหรับ dropdown
+ *
+ * ขั้นที่ 1: ILIKE บน name_th, name_en, brand, sku (เร็ว — prefix/substring match)
+ * ขั้นที่ 2: ถ้าได้ผลน้อยกว่า 3 รายการ → fallback ด้วย smart_search (trigram fuzzy)
+ *           เพื่อรองรับ typo, คำสะกดผิด, หรือพิมภาษาอังกฤษแล้วอยากค้นภาษาไทย
  */
 export async function searchSuggestions(
   query: string,
   limit = 5
 ): Promise<Array<{ name_th: string; brand: string | null }>> {
-  if (query.trim().length < 2) return []
+  const trimmed = query.trim()
+  if (trimmed.length < 2) return []
 
-  const { data, error } = await supabase
+  // --- ขั้น 1: Multi-field ILIKE ---
+  const { data: exact } = await supabase
     .from('products')
     .select('name_th, brand')
-    .ilike('name_th', `%${query.trim()}%`)
+    .or(
+      `name_th.ilike.%${trimmed}%,name_en.ilike.%${trimmed}%,brand.ilike.%${trimmed}%,sku.ilike.%${trimmed}%`
+    )
     .eq('is_active', true)
     .limit(limit)
 
-  if (error) return []
-  return data ?? []
+  if ((exact?.length ?? 0) >= 3) return exact ?? []
+
+  // --- ขั้น 2: Fuzzy fallback ผ่าน smart_search (trigram + FTS) ---
+  try {
+    const { data: fuzzy } = await supabase.rpc('smart_search', {
+      p_query: trimmed,
+      p_limit: limit,
+    })
+
+    const fuzzyMapped = ((fuzzy as SearchResult[]) ?? []).map((r) => ({
+      name_th: r.name_th,
+      brand: r.brand,
+    }))
+
+    // รวมและ deduplicate โดยใช้ name_th เป็น key
+    const seen = new Set<string>()
+    const merged = [...(exact ?? []), ...fuzzyMapped].filter((r) => {
+      if (seen.has(r.name_th)) return false
+      seen.add(r.name_th)
+      return true
+    })
+
+    return merged.slice(0, limit)
+  } catch {
+    return exact ?? []
+  }
 }
 
 /**

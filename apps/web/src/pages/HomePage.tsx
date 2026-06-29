@@ -8,6 +8,7 @@ import { ProductGrid } from '@/components/product/ProductGrid'
 import { useCategories } from '@/hooks/useCategories'
 import { usePopularProducts } from '@/hooks/useProducts'
 import { useGarage } from '@/contexts/GarageContext'
+import { BrandLogo } from '@/components/vehicle/BrandLogo'
 import heroPng from '@/assets/hero.png'
 
 interface PendingVehicle {
@@ -97,11 +98,16 @@ export default function HomePage() {
         {primaryVehicle && !pendingVehicle && (
           <div className="space-y-3">
             <div className="flex items-center justify-between rounded-xl border border-accent/30 bg-accent/10 px-4 py-3">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-accent">รถของคุณ</p>
-                <p className="font-semibold text-foreground">
-                  {primaryVehicle.brand} {primaryVehicle.model} {primaryVehicle.year}
-                </p>
+              <div className="flex items-center gap-3">
+                <BrandLogo brand={primaryVehicle.brand} className="h-7 w-14 object-contain" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-accent">
+                    รถของคุณ
+                  </p>
+                  <p className="font-semibold text-foreground">
+                    {primaryVehicle.brand} {primaryVehicle.model} {primaryVehicle.year}
+                  </p>
+                </div>
               </div>
               <Link
                 to={`/search?vehicle=${primaryVehicle.id}`}

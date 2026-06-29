@@ -33,6 +33,16 @@ interface FilterPanelProps {
 export function FilterPanel({ draft, onChange, onApply, onReset, hideActions }: FilterPanelProps) {
   const { data: categoryTree = [] } = useCategories()
 
+  // รวม root + children ให้ flat เพื่อใช้ lookup ชื่อและแสดงใน dropdown
+  const allCategories = categoryTree.flatMap((cat) => [
+    { ...cat, isChild: false },
+    ...cat.children.map((child) => ({ ...child, isChild: true })),
+  ])
+
+  const selectedCategoryName = draft.categoryId
+    ? allCategories.find((c) => c.id === draft.categoryId)?.name_th
+    : undefined
+
   const selectedPriceLabel =
     PRICE_RANGES.find((r) => r.min === draft.minPrice && r.max === draft.maxPrice)?.label ??
     'ทุกราคา'
@@ -47,12 +57,16 @@ export function FilterPanel({ draft, onChange, onApply, onReset, hideActions }: 
           onValueChange={(v) => onChange({ ...draft, categoryId: v ? Number(v) : undefined })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="ทุกหมวดหมู่" />
+            {/* ระบุชื่อที่แสดงเองเพื่อแก้ปัญหา SelectValue โชว์ ID แทนชื่อ */}
+            <SelectValue placeholder="ทุกหมวดหมู่">
+              {draft.categoryId ? (selectedCategoryName ?? 'กำลังโหลด...') : undefined}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">ทุกหมวดหมู่</SelectItem>
-            {categoryTree.map((cat) => (
+            {allCategories.map((cat) => (
               <SelectItem key={cat.id} value={String(cat.id)}>
+                {cat.isChild ? '\u00a0\u00a0' : ''}
                 {cat.icon ? `${cat.icon} ` : ''}
                 {cat.name_th}
               </SelectItem>

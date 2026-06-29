@@ -10,8 +10,9 @@ import { SmartSearchBox } from '@/components/search/SmartSearchBox'
 import { FilterChips, type ActiveFilter } from '@/components/filter/FilterChips'
 import { FilterDrawer, type FilterState } from '@/components/filter/FilterDrawer'
 import { FilterPanel } from '@/components/filter/FilterPanel'
+import { VehicleSelector } from '@/components/vehicle/VehicleSelector'
 import { ProductGrid } from '@/components/product/ProductGrid'
-import { useSmartSearch } from '@/hooks/useProducts'
+import { useSmartSearch, usePopularProducts } from '@/hooks/useProducts'
 import { useVehicle } from '@/hooks/useVehicles'
 import { useCategories } from '@/hooks/useCategories'
 import { useGarage } from '@/contexts/GarageContext'
@@ -57,6 +58,9 @@ export default function SearchPage() {
     true
   )
 
+  // fallback: สินค้ายอดนิยม เมื่อ search ไม่เจอผล
+  const { data: popularRaw = [] } = usePopularProducts(8)
+
   function handleSearch(newQuery: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
@@ -78,6 +82,15 @@ export default function SearchPage() {
       else next.delete('maxPrice')
       if (filters.inStock) next.set('inStock', 'true')
       else next.delete('inStock')
+      return next
+    })
+  }
+
+  // เมื่อเลือกรถจาก sidebar VehicleSelector
+  function handleSidebarVehicleSelect(vehicleId: number) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('vehicle', String(vehicleId))
       return next
     })
   }
@@ -120,11 +133,8 @@ export default function SearchPage() {
     })
   if (inStock) activeFilters.push({ key: 'inStock', label: 'สต็อก', value: 'มีสินค้า' })
 
-  // sidebar draft state — apply ทันทีเมื่อเปลี่ยน
+  // sidebar filter state — apply ทันทีเมื่อเปลี่ยน
   const sidebarState: FilterState = { categoryId, brand, minPrice, maxPrice, inStock }
-  function handleSidebarChange(next: FilterState) {
-    handleFilterApply(next)
-  }
 
   const results = (searchResponse?.results ?? []).map((r) => ({
     id: r.id,
@@ -137,48 +147,70 @@ export default function SearchPage() {
     product_inventory: null,
   }))
 
+  const popularProducts = popularRaw.map((p) => ({
+    ...p,
+    product_inventory: p.product_inventory
+      ? [p.product_inventory as unknown as { quantity: number }]
+      : null,
+  }))
+
+  const hasQuery = !!q
+  const zeroResults = !isLoading && !isFetching && hasQuery && results.length === 0
+
   return (
     <div className="mx-auto max-w-6xl">
       {/* search box — sticky */}
-      <div className="sticky top-[57px] z-30 border-b border-border bg-background/95 px-4 py-3 backdrop-blur lg:max-w-none">
+      <div className="sticky top-[57px] z-30 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <SmartSearchBox initialValue={q} autoFocus={!q} onSearch={handleSearch} />
       </div>
 
       <div className="flex gap-0">
         {/* ===== DESKTOP SIDEBAR ===== */}
         <aside className="hidden lg:block w-64 shrink-0 border-r border-border">
-          <div className="sticky top-[130px] p-5 space-y-1">
-            <h2 className="mb-4 text-base font-semibold">กรองสินค้า</h2>
+          <div className="sticky top-[130px] overflow-y-auto max-h-[calc(100vh-130px)] p-5 space-y-5">
+            {/* ===== ยี่ห้อรถ / เลือกรุ่นรถ ===== */}
+            <div>
+              <h3 className="mb-2 text-sm font-semibold">รุ่นรถ</h3>
 
-            {/* รุ่นรถที่ filter อยู่ */}
-            {vehicleLabel && (
-              <div className="mb-4 rounded-lg bg-accent/10 border border-accent/30 px-3 py-2">
-                <p className="text-xs font-medium text-accent uppercase tracking-wide">รุ่นรถ</p>
-                <p className="text-sm font-semibold">{vehicleLabel}</p>
-                <button
-                  onClick={() => handleRemoveFilter('vehicle')}
-                  className="mt-1 text-xs text-muted-foreground hover:text-destructive underline-offset-2 hover:underline"
-                >
-                  ล้างตัวกรองรถ
-                </button>
-              </div>
-            )}
+              {/* รถที่กำลัง filter อยู่ */}
+              {vehicleLabel && (
+                <div className="mb-3 rounded-lg bg-accent/10 border border-accent/30 px-3 py-2">
+                  <p className="text-xs font-medium text-accent uppercase tracking-wide">
+                    กำลังดูอะไหล่สำหรับ
+                  </p>
+                  <p className="text-sm font-semibold">{vehicleLabel}</p>
+                  <button
+                    onClick={() => handleRemoveFilter('vehicle')}
+                    className="mt-1 text-xs text-muted-foreground hover:text-destructive underline-offset-2 hover:underline"
+                  >
+                    ล้างตัวกรองรถ
+                  </button>
+                </div>
+              )}
 
-            <FilterPanel
-              draft={sidebarState}
-              onChange={handleSidebarChange}
-              onApply={() => {}}
-              onReset={() => {
-                handleFilterApply({})
-              }}
-              hideActions
-            />
+              {/* compact VehicleSelector — brand → model → year แบบ vertical */}
+              <VehicleSelector onSelect={(id) => handleSidebarVehicleSelect(id)} />
+            </div>
 
-            {/* ปุ่ม reset สำหรับ sidebar */}
+            <div className="border-t border-border" />
+
+            {/* ===== Filter (category, price, stock) ===== */}
+            <div>
+              <h3 className="mb-3 text-sm font-semibold">กรองสินค้า</h3>
+              <FilterPanel
+                draft={sidebarState}
+                onChange={(next) => handleFilterApply(next)}
+                onApply={() => {}}
+                onReset={() => handleFilterApply({})}
+                hideActions
+              />
+            </div>
+
+            {/* ปุ่ม reset ทั้งหมด */}
             {(categoryId || brand || minPrice || maxPrice || inStock) && (
               <button
                 onClick={() => handleFilterApply({})}
-                className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
               >
                 ล้างตัวกรองทั้งหมด
               </button>
@@ -198,7 +230,7 @@ export default function SearchPage() {
             />
           </div>
 
-          {/* active filter chips บน desktop (เฉพาะ vehicle chip เพราะที่เหลืออยู่ sidebar) */}
+          {/* active filter chips — desktop (แถบบาง บอก active filters) */}
           {activeFilters.length > 0 && (
             <div className="hidden lg:flex flex-wrap gap-2 border-b border-border px-5 py-2.5">
               {activeFilters.map((f) => (
@@ -222,33 +254,49 @@ export default function SearchPage() {
 
           {/* results */}
           <div className="px-4 py-4 lg:px-5">
-            {!isLoading && q && (
+            {/* result count */}
+            {!isLoading && hasQuery && (
               <p className="mb-3 text-sm text-muted-foreground">
                 {isFetching
                   ? 'กำลังค้นหา...'
                   : results.length > 0
-                    ? `พบ ${results.length} รายการ${q ? ` สำหรับ "${q}"` : ''}`
-                    : `ไม่พบสินค้า${q ? ` สำหรับ "${q}"` : ''}`}
+                    ? `พบ ${results.length} รายการ สำหรับ "${q}"`
+                    : `ไม่พบสินค้าที่ตรงกับ "${q}"`}
               </p>
             )}
 
-            {!isLoading && !isFetching && q && results.length === 0 && (
-              <div className="mb-4 rounded-xl border border-border bg-muted/50 p-4 text-sm">
-                <p className="font-medium">ลองค้นหาด้วย</p>
-                <ul className="mt-1 space-y-1 text-muted-foreground">
-                  <li>• ชื่อสินค้าภาษาไทย หรือ ภาษาอังกฤษ</li>
-                  <li>• รหัสอะไหล่ (เช่น 04465-02200)</li>
-                  <li>• ยี่ห้อสินค้า (เช่น Brembo, Bosch)</li>
-                </ul>
-              </div>
+            {/* zero-result: tip + popular fallback */}
+            {zeroResults && (
+              <>
+                <div className="mb-5 rounded-xl border border-border bg-muted/50 p-4 text-sm">
+                  <p className="font-medium">ลองค้นหาด้วย</p>
+                  <ul className="mt-1 space-y-1 text-muted-foreground">
+                    <li>• ชื่อสินค้าภาษาไทย หรือ ภาษาอังกฤษ (brake pad, ผ้าเบรก)</li>
+                    <li>• รหัสอะไหล่ (เช่น 04465-02200)</li>
+                    <li>• ยี่ห้อสินค้า (เช่น Brembo, Bosch, Denso)</li>
+                  </ul>
+                </div>
+
+                {popularProducts.length > 0 && (
+                  <>
+                    <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+                      สินค้าที่คนนิยม
+                    </h2>
+                    <ProductGrid products={popularProducts} isLoading={false} skeletonCount={4} />
+                  </>
+                )}
+              </>
             )}
 
-            <ProductGrid
-              products={results}
-              isLoading={isLoading}
-              skeletonCount={6}
-              emptyMessage={q ? undefined : 'พิมพ์ชื่อสินค้าหรือรุ่นรถเพื่อค้นหา'}
-            />
+            {/* normal results */}
+            {!zeroResults && (
+              <ProductGrid
+                products={results}
+                isLoading={isLoading}
+                skeletonCount={6}
+                emptyMessage={hasQuery ? undefined : 'พิมพ์ชื่อสินค้าหรือรุ่นรถเพื่อค้นหา'}
+              />
+            )}
           </div>
         </div>
       </div>

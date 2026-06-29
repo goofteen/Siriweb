@@ -9,6 +9,7 @@ import { useProductDetail } from '@/hooks/useProducts'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useGarage } from '@/contexts/GarageContext'
+import { BrandLogo } from '@/components/vehicle/BrandLogo'
 import { cn } from '@/lib/utils'
 
 export default function ProductDetailPage() {
@@ -170,6 +171,10 @@ export default function ProductDetailPage() {
                     primaryVehicle?.id === v.id && 'border-green-500 bg-green-50 text-green-800'
                   )}
                 >
+                  <BrandLogo
+                    brand={v.brand}
+                    className="mr-0.5 inline h-3.5 w-7 object-contain align-middle"
+                  />
                   {v.brand} {v.model} {v.year_from}
                   {v.year_to ? `–${String(v.year_to).slice(-2)}` : '+'}
                 </Badge>

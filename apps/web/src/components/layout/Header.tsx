@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { useGarage } from '@/contexts/GarageContext'
+import { BrandLogo } from '@/components/vehicle/BrandLogo'
 import { cn } from '@/lib/utils'
 
 interface HeaderProps {
@@ -31,7 +32,7 @@ export function Header({ hideSearchIcon = false }: HeaderProps) {
                 'text-xs font-medium text-foreground transition-colors hover:bg-accent/20'
               )}
             >
-              <span className="size-1.5 rounded-full bg-accent" />
+              <BrandLogo brand={primaryVehicle.brand} className="h-3.5 w-7 object-contain" />
               {primaryVehicle.brand} {primaryVehicle.model}
             </Link>
           )}

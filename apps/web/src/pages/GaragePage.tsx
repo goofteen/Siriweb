@@ -5,6 +5,7 @@ import { Car, Plus, Trash2, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { VehicleSelector } from '@/components/vehicle/VehicleSelector'
 import { useGarage, type GarageVehicle } from '@/contexts/GarageContext'
+import { BrandLogo } from '@/components/vehicle/BrandLogo'
 import { cn } from '@/lib/utils'
 
 export default function GaragePage() {
@@ -105,6 +106,9 @@ function VehicleCard({ vehicle, isPrimary, onSetPrimary, onRemove, onBrowse }: V
               รถหลัก
             </div>
           )}
+          <div className="mb-1">
+            <BrandLogo brand={vehicle.brand} className="h-5 w-12 object-contain" />
+          </div>
           <p className="font-semibold">
             {vehicle.brand} {vehicle.model}
           </p>

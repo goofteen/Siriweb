@@ -1,12 +1,13 @@
 /**
  * SmartSearchBox — search input พร้อม autocomplete
  * - debounce 300ms ก่อน fetch suggestions
+ * - แสดง suggestions จาก ILIKE + fuzzy fallback (ดู search.ts)
  * - กด Enter หรือเลือก suggestion → navigate ไป /search?q=...
- * - zero-result handling: แสดง "ลองค้น..." แนะนำ
+ * - dropdown คงอยู่ระหว่าง fetch — ไม่กะพริบหาย
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, X } from 'lucide-react'
+import { Search, X, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { searchSuggestions } from '@/lib/search'
 import { cn } from '@/lib/utils'
@@ -32,9 +33,26 @@ export function SmartSearchBox({
     []
   )
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isFetching, setIsFetching] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ปิด dropdown เมื่อ click นอก component
+  const closeDropdown = useCallback(() => {
+    setShowSuggestions(false)
+  }, [])
+
+  useEffect(() => {
+    function handleMouseDown(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        closeDropdown()
+      }
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [closeDropdown])
 
   // sync ถ้า initialValue เปลี่ยน (เช่น กลับมาหน้า search)
   useEffect(() => {
@@ -48,14 +66,21 @@ export function SmartSearchBox({
     if (query.trim().length < 2) {
       setSuggestions([])
       setShowSuggestions(false)
+      setIsFetching(false)
       return
     }
+
+    // แสดง loading indicator ทันที ไม่รอ debounce
+    setIsFetching(true)
+    setShowSuggestions(true)
 
     debounceRef.current = setTimeout(async () => {
       const results = await searchSuggestions(query, 6)
       setSuggestions(results)
-      setShowSuggestions(results.length > 0)
+      setIsFetching(false)
       setSelectedIndex(-1)
+      // ถ้าผลว่างเปล่า ยังคง showSuggestions=false (ปิด dropdown)
+      if (results.length === 0) setShowSuggestions(false)
     }, 300)
 
     return () => {
@@ -68,6 +93,7 @@ export function SmartSearchBox({
     if (!trimmed) return
     setShowSuggestions(false)
     setSuggestions([])
+    setIsFetching(false)
     if (onSearch) {
       onSearch(trimmed)
     } else {
@@ -76,10 +102,17 @@ export function SmartSearchBox({
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (!showSuggestions || suggestions.length === 0) {
-      if (e.key === 'Enter') handleSubmit(query)
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (showSuggestions && suggestions.length > 0 && selectedIndex >= 0) {
+        handleSubmit(suggestions[selectedIndex].name_th)
+      } else {
+        handleSubmit(query)
+      }
       return
     }
+
+    if (!showSuggestions || suggestions.length === 0) return
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -87,29 +120,27 @@ export function SmartSearchBox({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setSelectedIndex((i) => Math.max(i - 1, -1))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      if (selectedIndex >= 0) {
-        handleSubmit(suggestions[selectedIndex].name_th)
-      } else {
-        handleSubmit(query)
-      }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false)
     }
   }
 
+  const dropdownVisible = showSuggestions && (isFetching || suggestions.length > 0)
+
   return (
-    <div className={cn('relative', className)}>
+    <div ref={containerRef} className={cn('relative', className)}>
       <div className="relative flex items-center">
-        <Search className="absolute left-3 size-4 text-muted-foreground" />
+        {isFetching ? (
+          <Loader2 className="absolute left-3 size-4 animate-spin text-muted-foreground" />
+        ) : (
+          <Search className="absolute left-3 size-4 text-muted-foreground" />
+        )}
         <Input
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          onFocus={() => (suggestions.length > 0 || isFetching) && setShowSuggestions(true)}
           placeholder={placeholder}
           autoFocus={autoFocus}
           autoComplete="off"
@@ -121,6 +152,7 @@ export function SmartSearchBox({
               setQuery('')
               setSuggestions([])
               setShowSuggestions(false)
+              setIsFetching(false)
               inputRef.current?.focus()
             }}
             aria-label="ล้างการค้นหา"
@@ -132,11 +164,20 @@ export function SmartSearchBox({
       </div>
 
       {/* autocomplete dropdown */}
-      {showSuggestions && suggestions.length > 0 && (
+      {dropdownVisible && (
         <ul
           role="listbox"
           className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg"
         >
+          {/* loading skeleton */}
+          {isFetching && suggestions.length === 0 && (
+            <li className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              <span>กำลังค้นหา...</span>
+            </li>
+          )}
+
+          {/* suggestions */}
           {suggestions.map((s, i) => (
             <li
               key={i}
