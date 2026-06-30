@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Pencil, Tag, X, Search } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
@@ -107,12 +107,10 @@ export default function AdminCategoriesPage() {
               เพิ่มประเภท
             </Button>
           ) : (
-            <Button asChild>
-              <Link to="/admin/categories/new">
-                <Plus className="mr-1.5 size-4" />
-                เพิ่มหมวด
-              </Link>
-            </Button>
+            <Link to="/admin/categories/new" className={buttonVariants({ variant: 'default' })}>
+              <Plus className="size-4" />
+              เพิ่มหมวด
+            </Link>
           )}
         </div>
       </div>

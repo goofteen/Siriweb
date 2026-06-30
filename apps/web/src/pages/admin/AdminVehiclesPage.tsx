@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Pencil, Car, X, Search } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
@@ -114,12 +114,10 @@ export default function AdminVehiclesPage() {
             <Plus className="mr-1.5 size-4" />
             เพิ่มยี่ห้อรถ
           </Button>
-          <Button asChild>
-            <Link to="/admin/vehicles/new">
-              <Plus className="mr-1.5 size-4" />
-              เพิ่มรุ่นรถ
-            </Link>
-          </Button>
+          <Link to="/admin/vehicles/new" className={buttonVariants({ variant: 'default' })}>
+            <Plus className="size-4" />
+            เพิ่มรุ่นรถ
+          </Link>
         </div>
       </div>
 
@@ -210,9 +208,12 @@ export default function AdminVehiclesPage() {
             <Car className="mb-3 size-10 text-muted-foreground/30" />
             <p className="font-medium">{hasFilter ? 'ไม่พบรุ่นรถที่ค้นหา' : 'ยังไม่มีรุ่นรถ'}</p>
             {!hasFilter && (
-              <Button asChild variant="outline" size="sm" className="mt-4">
-                <Link to="/admin/vehicles/new">เพิ่มรุ่นแรก</Link>
-              </Button>
+              <Link
+                to="/admin/vehicles/new"
+                className={buttonVariants({ variant: 'outline', size: 'sm' }) + ' mt-4'}
+              >
+                เพิ่มรุ่นแรก
+              </Link>
             )}
           </div>
         ) : (

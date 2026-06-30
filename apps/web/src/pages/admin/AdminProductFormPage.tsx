@@ -4,7 +4,17 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Upload, X, Plus, Trash2, ChevronDown, AlertTriangle } from 'lucide-react'
+import {
+  ArrowLeft,
+  Upload,
+  X,
+  Plus,
+  Trash2,
+  ChevronDown,
+  AlertTriangle,
+  Car,
+  Search,
+} from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +34,15 @@ interface Branch {
   name: string
   code: string
   sort_order: number
+}
+
+interface Vehicle {
+  id: number
+  brand: string
+  model: string
+  year_from: number
+  year_to: number
+  engine: string | null
 }
 
 interface ProductForm {
@@ -73,6 +92,12 @@ export default function AdminProductFormPage() {
   const [catQuery, setCatQuery] = useState('')
   const catWrapRef = useRef<HTMLDivElement>(null)
 
+  // vehicle picker state
+  const [selectedVehicles, setSelectedVehicles] = useState<Vehicle[]>([])
+  const [vehicleOpen, setVehicleOpen] = useState(false)
+  const [vehicleQuery, setVehicleQuery] = useState('')
+  const vehicleWrapRef = useRef<HTMLDivElement>(null)
+
   // ─── unsaved-changes guard ─────────────────────────────────────────────────
   // warn on browser refresh / tab close
   useEffect(() => {
@@ -91,12 +116,16 @@ export default function AdminProductFormPage() {
     navigate(to)
   }
 
-  // ─── close combobox on outside click ──────────────────────────────────────
+  // ─── close comboboxes on outside click ───────────────────────────────────
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (catWrapRef.current && !catWrapRef.current.contains(e.target as Node)) {
         setCatOpen(false)
         setCatQuery('')
+      }
+      if (vehicleWrapRef.current && !vehicleWrapRef.current.contains(e.target as Node)) {
+        setVehicleOpen(false)
+        setVehicleQuery('')
       }
     }
     document.addEventListener('mousedown', handle)
@@ -117,17 +146,34 @@ export default function AdminProductFormPage() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // ─── data: branches ───────────────────────────────────────────────────────
-  const { data: branches = [] } = useQuery<Branch[]>({
-    queryKey: ['admin-branches'],
+  // ─── data: all vehicles (for picker) ─────────────────────────────────────
+  const { data: allVehicles = [] as Vehicle[] } = useQuery<Vehicle[]>({
+    queryKey: ['admin-all-vehicles'],
     queryFn: async () => {
       const { data, error } = await supabase
+        .from('vehicles')
+        .select('id, brand, model, year_from, year_to, engine')
+        .order('brand')
+        .order('model')
+        .order('year_from')
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // ─── data: branches ───────────────────────────────────────────────────────
+  const { data: branches = [] as Branch[] } = useQuery<Branch[]>({
+    queryKey: ['admin-branches'],
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('branches')
         .select('id, name, code, sort_order')
         .eq('is_active', true)
         .order('sort_order')
       if (error) throw error
-      return data ?? []
+      return (data ?? []) as Branch[]
     },
     staleTime: 10 * 60 * 1000,
   })
@@ -163,17 +209,31 @@ export default function AdminProductFormPage() {
       })
 
     // load branch inventory
-    supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(supabase as any)
       .from('product_inventory_branches')
       .select('branch_id, quantity')
       .eq('product_id', Number(id))
-      .then(({ data }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then(({ data }: { data: any[] | null }) => {
         if (!data) return
         const map: Record<number, string> = {}
         data.forEach((row) => {
           map[row.branch_id] = String(row.quantity)
         })
         setBranchInventory(map)
+      })
+
+    // load compatible vehicles
+    supabase
+      .from('product_vehicles')
+      .select('vehicles(id, brand, model, year_from, year_to, engine)')
+      .eq('product_id', Number(id))
+      .then(({ data }) => {
+        if (!data) return
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vehicles = (data as any[]).map((row) => row.vehicles).filter(Boolean) as Vehicle[]
+        setSelectedVehicles(vehicles)
       })
   }, [id, isEdit])
 
@@ -191,6 +251,23 @@ export default function AdminProductFormPage() {
   const filteredCats = categories.filter(
     (c) => !catQuery || c.name_th.toLowerCase().includes(catQuery.toLowerCase())
   )
+
+  // vehicle picker computed
+  const selectedVehicleIds = new Set(selectedVehicles.map((v) => v.id))
+  const filteredVehicles = allVehicles.filter((v) => {
+    if (selectedVehicleIds.has(v.id)) return false
+    if (!vehicleQuery.trim()) return true
+    const q = vehicleQuery.toLowerCase()
+    return (
+      v.brand.toLowerCase().includes(q) ||
+      v.model.toLowerCase().includes(q) ||
+      String(v.year_from).includes(q) ||
+      String(v.year_to).includes(q)
+    )
+  })
+  function vehicleLabel(v: Vehicle) {
+    return `${v.brand} ${v.model} ${v.year_from}–${String(v.year_to).slice(-2)}`
+  }
 
   // branch stock warning
   const filledBranches = Object.entries(branchInventory).filter(([, v]) => v.trim() !== '')
@@ -295,7 +372,11 @@ export default function AdminProductFormPage() {
 
     // save branch inventory
     if (productId) {
-      await supabase.from('product_inventory_branches').delete().eq('product_id', productId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from('product_inventory_branches')
+        .delete()
+        .eq('product_id', productId)
       const branchRows = Object.entries(branchInventory)
         .filter(([, v]) => v.trim() !== '' && !isNaN(Number(v)))
         .map(([branchId, v]) => ({
@@ -305,7 +386,20 @@ export default function AdminProductFormPage() {
           last_updated: new Date().toISOString(),
         }))
       if (branchRows.length > 0) {
-        await supabase.from('product_inventory_branches').insert(branchRows)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from('product_inventory_branches').insert(branchRows)
+      }
+    }
+
+    // save compatible vehicles
+    if (productId) {
+      await supabase.from('product_vehicles').delete().eq('product_id', productId)
+      if (selectedVehicles.length > 0) {
+        await supabase
+          .from('product_vehicles')
+          .insert(
+            selectedVehicles.map((v) => ({ product_id: productId as number, vehicle_id: v.id }))
+          )
       }
     }
 
@@ -651,6 +745,94 @@ export default function AdminProductFormPage() {
               </div>
             </div>
           )}
+        </section>
+
+        {/* ─── รุ่นรถที่ใช้ได้ ─── */}
+        <section className="rounded-xl border border-border bg-card p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Car className="size-4 text-muted-foreground" />
+            <h2 className="font-semibold">รุ่นรถที่ใช้ได้</h2>
+          </div>
+
+          {/* chips ที่เลือกแล้ว */}
+          {selectedVehicles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {selectedVehicles.map((v) => (
+                <span
+                  key={v.id}
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-xs"
+                >
+                  {vehicleLabel(v)}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedVehicles((prev) => prev.filter((x) => x.id !== v.id))
+                      setIsDirty(true)
+                    }}
+                    className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                    aria-label={`ลบ ${vehicleLabel(v)}`}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* vehicle picker combobox */}
+          <div ref={vehicleWrapRef} className="relative">
+            <div
+              className={cn(
+                'flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm transition-colors cursor-text',
+                vehicleOpen && 'border-ring ring-3 ring-ring/50'
+              )}
+              onClick={() => setVehicleOpen(true)}
+            >
+              <Search className="size-4 shrink-0 text-muted-foreground" />
+              {vehicleOpen ? (
+                <input
+                  autoFocus
+                  value={vehicleQuery}
+                  onChange={(e) => setVehicleQuery(e.target.value)}
+                  placeholder="ค้นหายี่ห้อ, รุ่น, ปี..."
+                  className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                />
+              ) : (
+                <span className="flex-1 text-muted-foreground">ค้นหาและเพิ่มรุ่นรถ...</span>
+              )}
+            </div>
+
+            {vehicleOpen && (
+              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-md overflow-hidden">
+                <div className="max-h-52 overflow-y-auto py-1">
+                  {filteredVehicles.length === 0 ? (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">
+                      {vehicleQuery ? 'ไม่พบรุ่นรถ' : 'ไม่มีรุ่นรถที่เหลือ'}
+                    </p>
+                  ) : (
+                    filteredVehicles.map((v) => (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setSelectedVehicles((prev) => [...prev, v])
+                          setVehicleQuery('')
+                          setIsDirty(true)
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                      >
+                        {vehicleLabel(v)}
+                        {v.engine && (
+                          <span className="ml-1.5 text-xs text-muted-foreground">{v.engine}</span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* ─── การแสดงผล ─── */}
