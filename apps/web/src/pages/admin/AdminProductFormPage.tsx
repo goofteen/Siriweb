@@ -97,6 +97,15 @@ export default function AdminProductFormPage() {
   const [vehicleOpen, setVehicleOpen] = useState(false)
   const [vehicleQuery, setVehicleQuery] = useState('')
   const vehicleWrapRef = useRef<HTMLDivElement>(null)
+  const [showVehicleAdd, setShowVehicleAdd] = useState(false)
+  const [newVehicle, setNewVehicle] = useState({
+    brand: '',
+    model: '',
+    year_from: '',
+    year_to: '',
+    engine: '',
+  })
+  const [savingVehicle, setSavingVehicle] = useState(false)
 
   // ─── unsaved-changes guard ─────────────────────────────────────────────────
   // warn on browser refresh / tab close
@@ -424,6 +433,40 @@ export default function AdminProductFormPage() {
     navigate('/admin/products')
   }
 
+  // ─── add new vehicle inline ───────────────────────────────────────────────
+  async function handleAddNewVehicle(e: React.FormEvent) {
+    e.preventDefault()
+    const brand = newVehicle.brand.trim()
+    const model = newVehicle.model.trim()
+    const yearFrom = parseInt(newVehicle.year_from)
+    const yearTo = parseInt(newVehicle.year_to)
+    if (!brand || !model || !yearFrom || !yearTo) return
+    setSavingVehicle(true)
+    const { data, error } = await supabase
+      .from('vehicles')
+      .insert({
+        brand,
+        model,
+        year_from: yearFrom,
+        year_to: yearTo,
+        engine: newVehicle.engine.trim() || null,
+      })
+      .select('id, brand, model, year_from, year_to, engine')
+      .single()
+    if (error || !data) {
+      alert(`เพิ่มรุ่นรถไม่สำเร็จ: ${error?.message}`)
+      setSavingVehicle(false)
+      return
+    }
+    setSelectedVehicles((prev) => [...prev, data as Vehicle])
+    setNewVehicle({ brand: '', model: '', year_from: '', year_to: '', engine: '' })
+    setShowVehicleAdd(false)
+    setVehicleOpen(false)
+    setVehicleQuery('')
+    setIsDirty(true)
+    setSavingVehicle(false)
+  }
+
   // ─── render ───────────────────────────────────────────────────────────────
 
   return (
@@ -604,6 +647,216 @@ export default function AdminProductFormPage() {
           </div>
         </section>
 
+        {/* ─── รุ่นรถที่ใช้ได้ ─── */}
+        <section className="rounded-xl border border-border bg-card p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Car className="size-4 text-muted-foreground" />
+            <h2 className="font-semibold">รุ่นรถที่ใช้ได้</h2>
+          </div>
+
+          {/* chips ที่เลือกแล้ว */}
+          {selectedVehicles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {selectedVehicles.map((v) => (
+                <span
+                  key={v.id}
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-xs"
+                >
+                  {vehicleLabel(v)}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedVehicles((prev) => prev.filter((x) => x.id !== v.id))
+                      setIsDirty(true)
+                    }}
+                    className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                    aria-label={`ลบ ${vehicleLabel(v)}`}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* vehicle picker combobox */}
+          <div ref={vehicleWrapRef} className="relative">
+            <div
+              className={cn(
+                'flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm transition-colors cursor-text',
+                vehicleOpen && 'border-ring ring-3 ring-ring/50'
+              )}
+              onClick={() => {
+                setVehicleOpen(true)
+                setShowVehicleAdd(false)
+              }}
+            >
+              <Search className="size-4 shrink-0 text-muted-foreground" />
+              {vehicleOpen ? (
+                <input
+                  autoFocus
+                  value={vehicleQuery}
+                  onChange={(e) => {
+                    setVehicleQuery(e.target.value)
+                    setShowVehicleAdd(false)
+                  }}
+                  placeholder="ค้นหายี่ห้อ, รุ่น, ปี..."
+                  className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+                />
+              ) : (
+                <span className="flex-1 text-muted-foreground">ค้นหาและเพิ่มรุ่นรถ...</span>
+              )}
+            </div>
+
+            {vehicleOpen && (
+              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-md overflow-hidden">
+                {/* list */}
+                {!showVehicleAdd && (
+                  <div className="max-h-52 overflow-y-auto py-1">
+                    {filteredVehicles.length === 0 ? (
+                      <>
+                        {vehicleQuery && (
+                          <p className="px-3 py-2 text-xs text-muted-foreground">
+                            ไม่พบ &ldquo;{vehicleQuery}&rdquo;
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            // pre-fill brand/model จาก query ถ้าพิมพ์มา
+                            const parts = vehicleQuery.trim().split(' ')
+                            setNewVehicle({
+                              brand: parts[0] ?? '',
+                              model: parts.slice(1).join(' '),
+                              year_from: '',
+                              year_to: '',
+                              engine: '',
+                            })
+                            setShowVehicleAdd(true)
+                          }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-primary hover:bg-muted transition-colors"
+                        >
+                          <Plus className="size-4 shrink-0" />
+                          เพิ่มรุ่นรถใหม่{vehicleQuery ? ` "${vehicleQuery}"` : ''}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {filteredVehicles.map((v) => (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setSelectedVehicles((prev) => [...prev, v])
+                              setVehicleQuery('')
+                              setIsDirty(true)
+                            }}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                          >
+                            {vehicleLabel(v)}
+                            {v.engine && (
+                              <span className="ml-1.5 text-xs text-muted-foreground">
+                                {v.engine}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                        {/* ปุ่มเพิ่มใหม่ท้าย list เสมอ */}
+                        <div className="border-t border-border mt-1 pt-1">
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setNewVehicle({
+                                brand: '',
+                                model: '',
+                                year_from: '',
+                                year_to: '',
+                                engine: '',
+                              })
+                              setShowVehicleAdd(true)
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-primary hover:bg-muted transition-colors"
+                          >
+                            <Plus className="size-4 shrink-0" />
+                            เพิ่มรุ่นรถใหม่
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* inline add form */}
+                {showVehicleAdd && (
+                  <form onSubmit={handleAddNewVehicle} className="p-3 space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">เพิ่มรุ่นรถใหม่</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        autoFocus
+                        value={newVehicle.brand}
+                        onChange={(e) => setNewVehicle((v) => ({ ...v, brand: e.target.value }))}
+                        placeholder="ยี่ห้อ เช่น Honda"
+                        required
+                      />
+                      <Input
+                        value={newVehicle.model}
+                        onChange={(e) => setNewVehicle((v) => ({ ...v, model: e.target.value }))}
+                        placeholder="รุ่น เช่น Civic"
+                        required
+                      />
+                      <Input
+                        value={newVehicle.year_from}
+                        onChange={(e) =>
+                          setNewVehicle((v) => ({ ...v, year_from: e.target.value }))
+                        }
+                        placeholder="ปีเริ่ม เช่น 2019"
+                        type="number"
+                        min="1990"
+                        max="2099"
+                        required
+                      />
+                      <Input
+                        value={newVehicle.year_to}
+                        onChange={(e) => setNewVehicle((v) => ({ ...v, year_to: e.target.value }))}
+                        placeholder="ปีสิ้นสุด เช่น 2023"
+                        type="number"
+                        min="1990"
+                        max="2099"
+                        required
+                      />
+                    </div>
+                    <Input
+                      value={newVehicle.engine}
+                      onChange={(e) => setNewVehicle((v) => ({ ...v, engine: e.target.value }))}
+                      placeholder="เครื่องยนต์ เช่น 1.5 VTEC (optional)"
+                    />
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="submit"
+                        disabled={savingVehicle}
+                        className="flex-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/80 disabled:opacity-50 transition-colors"
+                      >
+                        {savingVehicle ? 'กำลังบันทึก...' : 'บันทึกและเพิ่ม'}
+                      </button>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => setShowVehicleAdd(false)}
+                        className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-muted transition-colors"
+                      >
+                        ยกเลิก
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* ─── รูปภาพ ─── */}
         <section className="rounded-xl border border-border bg-card p-5 space-y-3">
           <h2 className="font-semibold">รูปภาพ</h2>
@@ -745,94 +998,6 @@ export default function AdminProductFormPage() {
               </div>
             </div>
           )}
-        </section>
-
-        {/* ─── รุ่นรถที่ใช้ได้ ─── */}
-        <section className="rounded-xl border border-border bg-card p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <Car className="size-4 text-muted-foreground" />
-            <h2 className="font-semibold">รุ่นรถที่ใช้ได้</h2>
-          </div>
-
-          {/* chips ที่เลือกแล้ว */}
-          {selectedVehicles.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {selectedVehicles.map((v) => (
-                <span
-                  key={v.id}
-                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-xs"
-                >
-                  {vehicleLabel(v)}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedVehicles((prev) => prev.filter((x) => x.id !== v.id))
-                      setIsDirty(true)
-                    }}
-                    className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
-                    aria-label={`ลบ ${vehicleLabel(v)}`}
-                  >
-                    <X className="size-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* vehicle picker combobox */}
-          <div ref={vehicleWrapRef} className="relative">
-            <div
-              className={cn(
-                'flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm transition-colors cursor-text',
-                vehicleOpen && 'border-ring ring-3 ring-ring/50'
-              )}
-              onClick={() => setVehicleOpen(true)}
-            >
-              <Search className="size-4 shrink-0 text-muted-foreground" />
-              {vehicleOpen ? (
-                <input
-                  autoFocus
-                  value={vehicleQuery}
-                  onChange={(e) => setVehicleQuery(e.target.value)}
-                  placeholder="ค้นหายี่ห้อ, รุ่น, ปี..."
-                  className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
-                />
-              ) : (
-                <span className="flex-1 text-muted-foreground">ค้นหาและเพิ่มรุ่นรถ...</span>
-              )}
-            </div>
-
-            {vehicleOpen && (
-              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-md overflow-hidden">
-                <div className="max-h-52 overflow-y-auto py-1">
-                  {filteredVehicles.length === 0 ? (
-                    <p className="px-3 py-2 text-sm text-muted-foreground">
-                      {vehicleQuery ? 'ไม่พบรุ่นรถ' : 'ไม่มีรุ่นรถที่เหลือ'}
-                    </p>
-                  ) : (
-                    filteredVehicles.map((v) => (
-                      <button
-                        key={v.id}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setSelectedVehicles((prev) => [...prev, v])
-                          setVehicleQuery('')
-                          setIsDirty(true)
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
-                      >
-                        {vehicleLabel(v)}
-                        {v.engine && (
-                          <span className="ml-1.5 text-xs text-muted-foreground">{v.engine}</span>
-                        )}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
         </section>
 
         {/* ─── การแสดงผล ─── */}
