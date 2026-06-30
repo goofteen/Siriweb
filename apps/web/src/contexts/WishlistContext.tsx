@@ -2,8 +2,16 @@
  * WishlistContext — wishlist ที่ผูกกับ session (เก็บใน Supabase)
  * ใช้ optimistic update: เปลี่ยน UI ก่อน แล้วค่อย sync ไป Supabase
  */
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
+import { createSessionClient } from '@/lib/supabase'
 import { useSession } from './SessionContext'
 
 export interface WishlistItem {
@@ -26,6 +34,8 @@ const WishlistContext = createContext<WishlistContextValue | null>(null)
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { sessionId } = useSession()
+  // สร้าง client ใหม่เมื่อ sessionId เปลี่ยน เพื่อแนบ x-session-id header ตาม RLS policy
+  const supabase = useMemo(() => createSessionClient(sessionId), [sessionId])
   const [items, setItems] = useState<WishlistItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 

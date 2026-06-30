@@ -54,7 +54,7 @@ export default function ProductDetailPage() {
     primaryVehicle !== null && compatibleVehicles.some((v) => v && v.id === primaryVehicle.id)
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl pb-32">
       {/* breadcrumb */}
       <div className="flex items-center gap-1 overflow-x-auto px-4 py-3 text-sm text-muted-foreground">
         <Link to="/" className="shrink-0 hover:text-foreground">
@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
           <>
             <ChevronRight className="size-3.5 shrink-0" />
             <Link
-              to={`/category/${product.product_categories.slug}`}
+              to={`/search?category=${product.product_categories.id}`}
               className="shrink-0 hover:text-foreground"
             >
               {product.product_categories.name_th}

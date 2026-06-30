@@ -26,9 +26,6 @@ max_client_conn = 100
 [realtime]
 enabled = true
 ip_version = "IPv6"
-heartbeat_interval_ms = 30000
-subscribe_errors_max_redeliveries = 3
-ping_timeout_ms = 15000
 
 [studio]
 enabled = true
@@ -36,7 +33,7 @@ port = 54323
 api_url = "http://127.0.0.1"
 openai_api_key = "env(OPENAI_API_KEY)"
 
-[inbucket]
+[local_smtp]
 enabled = true
 port = 54324
 

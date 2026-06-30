@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 
 export interface SearchParams {
-  query: string
+  query?: string
   vehicleId?: number
   categoryId?: number
   brand?: string
@@ -37,7 +37,7 @@ export interface SearchResponse {
  */
 export async function smartSearch(params: SearchParams): Promise<SearchResponse> {
   const {
-    query,
+    query = '',
     vehicleId,
     categoryId,
     brand,

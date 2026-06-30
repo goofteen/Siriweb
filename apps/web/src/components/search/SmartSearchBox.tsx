@@ -121,6 +121,9 @@ export function SmartSearchBox({
       e.preventDefault()
       setSelectedIndex((i) => Math.max(i - 1, -1))
     } else if (e.key === 'Escape') {
+      // ล้าง suggestions ด้วย ไม่ใช่แค่ซ่อน — ป้องกัน onFocus re-show ทันที
+      setSuggestions([])
+      setIsFetching(false)
       setShowSuggestions(false)
     }
   }

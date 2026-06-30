@@ -66,15 +66,15 @@ export function ContactStoreSheet({
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-2xl pb-8">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="text-left text-lg">ติดต่อสั่งซื้อ</SheetTitle>
+      <SheetContent side="bottom" className="rounded-t-2xl">
+        <SheetHeader className="pb-2">
+          <SheetTitle className="text-left">ติดต่อสั่งซื้อ</SheetTitle>
           {productName && (
             <p className="text-left text-sm text-muted-foreground">สำหรับ: {productName}</p>
           )}
         </SheetHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-3 px-4 pb-8">
           {options.map(({ icon: Icon, label, sublabel, color, textColor, action }) => (
             <button
               key={label}

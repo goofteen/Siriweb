@@ -56,6 +56,28 @@ export function useVehicleYears(brand: string | null, model: string | null) {
   })
 }
 
+// ดึง vehicle แรก (ปีล่าสุด) ตามยี่ห้อ + รุ่น — ใช้ใน partial vehicle search
+export function useFirstVehicleByBrandModel(brand: string | null, model: string | null) {
+  return useQuery({
+    queryKey: ['vehicle-first-by-brand-model', brand, model],
+    queryFn: async () => {
+      if (!brand || !model) return null
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('id, brand, model, year_from, year_to')
+        .eq('brand', brand)
+        .eq('model', model)
+        .order('year_from', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (error) return null
+      return data
+    },
+    enabled: !!brand && !!model,
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
 // ดึง vehicle detail ตาม ID
 export function useVehicle(vehicleId: number | null) {
   return useQuery({

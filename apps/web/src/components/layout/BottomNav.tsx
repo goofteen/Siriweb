@@ -17,7 +17,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex max-w-lg items-center justify-around">
+      <div className="mx-auto flex max-w-2xl items-center justify-around">
         {navItems.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}

@@ -39,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
     primaryVehicle !== null && (product.vehicleIds?.includes(primaryVehicle.id) ?? false)
 
   return (
-    <div className="group relative rounded-xl border border-border bg-card transition-all hover:border-l-2 hover:border-l-accent hover:shadow-md">
+    <div className="group relative rounded-xl border border-border border-l-2 border-l-transparent bg-card transition-all hover:border-l-accent hover:shadow-md">
       {/* wishlist button */}
       <button
         onClick={(e) => {

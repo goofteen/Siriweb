@@ -9,7 +9,17 @@ export function useSmartSearch(params: SearchParams, enabled = true) {
   return useQuery({
     queryKey: ['smart-search', params],
     queryFn: () => smartSearch(params),
-    enabled: enabled && params.query.trim().length > 0,
+    enabled:
+      enabled &&
+      ((params.query?.trim().length ?? 0) > 0 ||
+        !!(
+          params.vehicleId ||
+          params.categoryId ||
+          params.brand ||
+          params.minPrice ||
+          params.maxPrice ||
+          params.inStock
+        )),
     staleTime: 30 * 1000, // cache search result 30 วินาที
     placeholderData: (prev) => prev, // ไม่ reset list เมื่อ query เปลี่ยน
   })

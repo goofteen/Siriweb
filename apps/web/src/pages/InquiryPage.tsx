@@ -149,9 +149,9 @@ export default function InquiryPage() {
 
       {/* รถที่มีใน garage */}
       {primaryVehicle && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm">
-          <span className="size-2 shrink-0 rounded-full bg-green-500" />
-          <span className="text-green-800">
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
+          <span className="size-2 shrink-0 rounded-full bg-accent" />
+          <span className="text-accent">
             รถของคุณ: {primaryVehicle.brand} {primaryVehicle.model} {primaryVehicle.year}
           </span>
         </div>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Heart, Trash2 } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useQuery } from '@tanstack/react-query'
@@ -51,12 +52,9 @@ export default function WishlistPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             กดไอคอน ❤️ บนสินค้าเพื่อบันทึกไว้ดูทีหลัง
           </p>
-          <Link
-            to="/search"
-            className="mt-4 inline-flex h-8 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            เริ่มค้นหาสินค้า
-          </Link>
+          <Button asChild variant="outline" size="sm" className="mt-4">
+            <Link to="/search">เริ่มค้นหาสินค้า</Link>
+          </Button>
         </div>
       )}
 
