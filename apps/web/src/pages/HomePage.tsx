@@ -45,7 +45,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-5xl">
       {/* hero banner */}
       <div className="relative overflow-hidden">
         <img src={heroPng} alt="อะไหล่รถยนต์ญี่ปุ่น" className="h-52 w-full object-cover" />

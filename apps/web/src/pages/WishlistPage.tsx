@@ -36,7 +36,7 @@ export default function WishlistPage() {
   const isLoading = wishlistLoading || productsLoading
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div className="mx-auto max-w-5xl px-4 py-6">
       <div className="mb-6">
         <h1 className="text-xl font-bold">รายการโปรด</h1>
         {!isLoading && items.length > 0 && (

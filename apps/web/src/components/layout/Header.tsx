@@ -21,7 +21,7 @@ export function Header({ hideSearchIcon = false }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         {/* left: back button on nested routes, logo on root */}
         {isRootRoute ? (
           <Link to="/" className="flex items-center gap-1.5">

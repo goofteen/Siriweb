@@ -54,7 +54,7 @@ export default function ProductDetailPage() {
     primaryVehicle !== null && compatibleVehicles.some((v) => v && v.id === primaryVehicle.id)
 
   return (
-    <div className="mx-auto max-w-2xl pb-32">
+    <div className="mx-auto max-w-5xl pb-32">
       {/* breadcrumb */}
       <div className="flex items-center gap-1 overflow-x-auto px-4 py-3 text-sm text-muted-foreground">
         <Link to="/" className="shrink-0 hover:text-foreground">
@@ -217,7 +217,7 @@ export default function ProductDetailPage() {
 
 function ProductDetailSkeleton() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-4">
+    <div className="mx-auto max-w-5xl px-4 py-4">
       <Skeleton className="mb-4 h-4 w-48" />
       <Skeleton className="aspect-square w-full rounded-2xl" />
       <div className="mt-4 space-y-3">
