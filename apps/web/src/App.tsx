@@ -25,6 +25,7 @@ const AdminVehiclesPage = lazy(() => import('./pages/admin/AdminVehiclesPage'))
 const AdminVehicleFormPage = lazy(() => import('./pages/admin/AdminVehicleFormPage'))
 const AdminInquiriesPage = lazy(() => import('./pages/admin/AdminInquiriesPage'))
 const AdminBranchesPage = lazy(() => import('./pages/admin/AdminBranchesPage'))
+const AdminBannersPage = lazy(() => import('./pages/admin/AdminBannersPage'))
 
 function PageLoader() {
   return (
@@ -70,6 +71,7 @@ function App() {
                     <Route path="vehicles/new" element={<AdminVehicleFormPage />} />
                     <Route path="vehicles/:id/edit" element={<AdminVehicleFormPage />} />
                     <Route path="branches" element={<AdminBranchesPage />} />
+                    <Route path="banners" element={<AdminBannersPage />} />
                     <Route path="inquiries" element={<AdminInquiriesPage />} />
                   </Route>
                 </Route>

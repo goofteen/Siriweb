@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Car, ChevronDown, ChevronUp } from 'lucide-react'
+import { Car, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useQuery } from '@tanstack/react-query'
 import { SmartSearchBox } from '@/components/search/SmartSearchBox'
 import { VehicleSelector, type VehicleSearchData } from '@/components/vehicle/VehicleSelector'
 import { ProductGrid } from '@/components/product/ProductGrid'
@@ -9,7 +10,16 @@ import { useCategories } from '@/hooks/useCategories'
 import { usePopularProducts } from '@/hooks/useProducts'
 import { useGarage } from '@/contexts/GarageContext'
 import { BrandLogo } from '@/components/vehicle/BrandLogo'
+import { supabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 import heroPng from '@/assets/hero.png'
+
+interface BannerData {
+  id: number
+  title: string | null
+  image_url: string
+  link_url: string | null
+}
 
 export default function HomePage() {
   usePageTitle()
@@ -19,6 +29,48 @@ export default function HomePage() {
   const { data: popularRaw = [], isLoading: popularLoading } = usePopularProducts(8)
   const [showAllCategories, setShowAllCategories] = useState(false)
   const [showOtherVehicle, setShowOtherVehicle] = useState(false)
+
+  // banner carousel
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: banners = [] } = useQuery<BannerData[]>({
+    queryKey: ['home-banners'],
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('banners')
+        .select('id, title, image_url, link_url')
+        .eq('is_active', true)
+        .order('sort_order')
+      if (error) throw error
+      return (data ?? []) as BannerData[]
+    },
+    staleTime: 60 * 1000,
+  })
+  const [bannerIdx, setBannerIdx] = useState(0)
+  const bannerRef = useRef<HTMLDivElement>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval>>(null)
+
+  const nextBanner = useCallback(() => {
+    setBannerIdx((prev) => (prev + 1) % banners.length)
+  }, [banners.length])
+
+  // auto-slide ทุก 5 วินาที
+  useEffect(() => {
+    if (banners.length <= 1) return
+    timerRef.current = setInterval(nextBanner, 5000)
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [banners.length, nextBanner])
+
+  function goToBanner(idx: number) {
+    setBannerIdx(idx)
+    // รีเซ็ต timer เมื่อ user กดเลือกเอง
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (banners.length > 1) {
+      timerRef.current = setInterval(nextBanner, 5000)
+    }
+  }
 
   const popular = popularRaw.map((p) => ({
     ...p,
@@ -64,6 +116,76 @@ export default function HomePage() {
           <SmartSearchBox />
         </div>
       </div>
+
+      {/* banner carousel */}
+      {banners.length > 0 && (
+        <div className="px-4 pt-4">
+          <div ref={bannerRef} className="relative overflow-hidden rounded-xl">
+            {/* slides */}
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${bannerIdx * 100}%)` }}
+            >
+              {banners.map((b) => {
+                const img = (
+                  <img
+                    key={b.id}
+                    src={b.image_url}
+                    alt={b.title ?? 'โปรโมชั่น'}
+                    className="h-36 w-full shrink-0 object-cover sm:h-48"
+                  />
+                )
+                return b.link_url ? (
+                  <Link key={b.id} to={b.link_url} className="block w-full shrink-0">
+                    {img}
+                  </Link>
+                ) : (
+                  <div key={b.id} className="w-full shrink-0">
+                    {img}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* prev/next arrows */}
+            {banners.length > 1 && (
+              <>
+                <button
+                  onClick={() => goToBanner((bannerIdx - 1 + banners.length) % banners.length)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 flex size-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                  aria-label="แบนเนอร์ก่อนหน้า"
+                >
+                  <ChevronLeft className="size-5" />
+                </button>
+                <button
+                  onClick={() => goToBanner((bannerIdx + 1) % banners.length)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex size-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                  aria-label="แบนเนอร์ถัดไป"
+                >
+                  <ChevronRight className="size-5" />
+                </button>
+              </>
+            )}
+
+            {/* dots indicator */}
+            {banners.length > 1 && (
+              <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+                {banners.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goToBanner(i)}
+                    className={cn(
+                      'size-2 rounded-full transition-all',
+                      i === bannerIdx ? 'w-5 bg-white' : 'bg-white/50 hover:bg-white/75'
+                    )}
+                    aria-label={`แบนเนอร์ ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* vehicle section */}
       <div className="space-y-3 px-4 py-4">

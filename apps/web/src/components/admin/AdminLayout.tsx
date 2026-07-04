@@ -10,6 +10,7 @@ import {
   Tag,
   Car,
   Building2,
+  Image,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
@@ -103,6 +104,23 @@ export function AdminLayout() {
             </div>
           )}
         </div>
+
+        {/* แบนเนอร์ */}
+        <NavLink
+          to="/admin/banners"
+          onClick={() => setMobileOpen(false)}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              isActive
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            )
+          }
+        >
+          <Image className="size-4 shrink-0" />
+          แบนเนอร์
+        </NavLink>
 
         {/* สาขา */}
         <NavLink
