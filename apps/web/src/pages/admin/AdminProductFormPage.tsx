@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   Car,
   Search,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -86,6 +88,10 @@ export default function AdminProductFormPage() {
   const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<Partial<ProductForm & { general: string }>>({})
   const [isDirty, setIsDirty] = useState(false)
+
+  // sku duplicate check
+  const [skuStatus, setSkuStatus] = useState<'idle' | 'checking' | 'ok' | 'duplicate'>('idle')
+  const [skuDupName, setSkuDupName] = useState('')
 
   // category combobox state
   const [catOpen, setCatOpen] = useState(false)
@@ -208,6 +214,8 @@ export default function AdminProductFormPage() {
           category_id: data.category_id ? String(data.category_id) : '',
           is_active: data.is_active ?? true,
         })
+        // SKU ของสินค้าที่กำลัง edit ไม่นับว่าซ้ำ
+        setSkuStatus('idle')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const inv = data.product_inventory as any
         setQuantity(String(inv?.quantity ?? 0))
@@ -307,11 +315,34 @@ export default function AdminProductFormPage() {
     setUploadingIdx(null)
   }
 
+  // ─── sku duplicate check ───────────────────────────────────────────────────
+  async function checkSkuDuplicate(sku: string) {
+    const trimmed = sku.trim()
+    if (!trimmed) {
+      setSkuStatus('idle')
+      return
+    }
+    setSkuStatus('checking')
+    const query = supabase.from('products').select('id, name_th').eq('sku', trimmed)
+    // ถ้าเป็น edit mode ให้ exclude ตัวเอง
+    if (isEdit && id) query.neq('id', Number(id))
+    const { data } = await query.limit(1).maybeSingle()
+    if (data) {
+      setSkuStatus('duplicate')
+      setSkuDupName(data.name_th)
+    } else {
+      setSkuStatus('ok')
+      setSkuDupName('')
+    }
+  }
+
   // ─── validate ─────────────────────────────────────────────────────────────
   function validate(): boolean {
     const errs: typeof errors = {}
     if (!form.name_th.trim()) errs.name_th = 'กรุณาใส่ชื่อสินค้า'
     if (!form.sku.trim()) errs.sku = 'กรุณาใส่ SKU'
+    if (skuStatus === 'checking') errs.sku = 'กำลังตรวจสอบ SKU กรุณารอสักครู่'
+    if (skuStatus === 'duplicate') errs.sku = `SKU นี้ถูกใช้โดย "${skuDupName}" แล้ว`
     if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0)
       errs.price = 'กรุณาใส่ราคาที่ถูกต้อง'
     setErrors(errs)
@@ -356,18 +387,20 @@ export default function AdminProductFormPage() {
       productId = data.id
     }
 
-    // save images
+    // save images — ลบรูปเก่าเสมอ แล้วค่อย insert ใหม่
     const validUrls = imageUrls.filter((u) => u.trim())
-    if (validUrls.length > 0 && productId) {
+    if (productId) {
       await supabase.from('product_images').delete().eq('product_id', productId)
-      await supabase.from('product_images').insert(
-        validUrls.map((url, i) => ({
-          product_id: productId,
-          url,
-          sort_order: i,
-          is_primary: i === 0,
-        }))
-      )
+      if (validUrls.length > 0) {
+        await supabase.from('product_images').insert(
+          validUrls.map((url, i) => ({
+            product_id: productId as number,
+            url,
+            sort_order: i,
+            is_primary: i === 0,
+          }))
+        )
+      }
     }
 
     // save total inventory
@@ -465,6 +498,7 @@ export default function AdminProductFormPage() {
     setVehicleQuery('')
     setIsDirty(true)
     setSavingVehicle(false)
+    queryClient.invalidateQueries({ queryKey: ['admin-all-vehicles'] })
   }
 
   // ─── render ───────────────────────────────────────────────────────────────
@@ -506,12 +540,33 @@ export default function AdminProductFormPage() {
               <label className="mb-1.5 block text-sm font-medium">
                 SKU <span className="text-destructive">*</span>
               </label>
-              <Input
-                value={form.sku}
-                onChange={set('sku')}
-                placeholder="BP-TOY-001"
-                className="font-mono"
-              />
+              <div className="relative">
+                <Input
+                  value={form.sku}
+                  onChange={(e) => {
+                    set('sku')(e)
+                    setSkuStatus('idle')
+                  }}
+                  onBlur={() => checkSkuDuplicate(form.sku)}
+                  placeholder="BP-TOY-001"
+                  className={cn(
+                    'font-mono pr-8',
+                    skuStatus === 'duplicate' &&
+                      'border-destructive focus-visible:ring-destructive/50'
+                  )}
+                />
+                {skuStatus === 'checking' && (
+                  <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 animate-spin text-muted-foreground" />
+                )}
+                {skuStatus === 'ok' && (
+                  <CheckCircle2 className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-green-500" />
+                )}
+              </div>
+              {skuStatus === 'duplicate' && !errors.sku && (
+                <p className="mt-1 text-xs text-destructive">
+                  SKU นี้ถูกใช้โดย &ldquo;{skuDupName}&rdquo; แล้ว
+                </p>
+              )}
               {errors.sku && <p className="mt-1 text-xs text-destructive">{errors.sku}</p>}
             </div>
             <div>
@@ -751,6 +806,7 @@ export default function AdminProductFormPage() {
                             onClick={() => {
                               setSelectedVehicles((prev) => [...prev, v])
                               setVehicleQuery('')
+                              setVehicleOpen(false)
                               setIsDirty(true)
                             }}
                             className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
