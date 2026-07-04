@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ChevronRight, Heart, Car, Package, Pencil } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Heart, Car, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -86,14 +86,27 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* ปุ่มแก้ไขรูป — ไปหน้า admin edit */}
-          <Link
-            to={`/admin/products/${product.id}/edit`}
-            className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/80"
-          >
-            <Pencil className="size-3.5" />
-            แก้ไขรูป
-          </Link>
+          {/* ปุ่มเปลี่ยนรูป ซ้าย/ขวา */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={() =>
+                  setActiveImageIdx((prev) => (prev - 1 + images.length) % images.length)
+                }
+                className="absolute left-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label="รูปก่อนหน้า"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <button
+                onClick={() => setActiveImageIdx((prev) => (prev + 1) % images.length)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                aria-label="รูปถัดไป"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* thumbnail strip */}
