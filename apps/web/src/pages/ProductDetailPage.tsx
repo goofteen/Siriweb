@@ -77,7 +77,7 @@ export default function ProductDetailPage() {
 
       {/* รูปสินค้า */}
       <div className="px-4">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
+        <div className="relative mx-auto max-h-[360px] max-w-xl overflow-hidden rounded-2xl bg-muted aspect-[4/3]">
           {activeImage ? (
             <img src={activeImage} alt={product.name_th} className="size-full object-contain" />
           ) : (
