@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ChevronRight, Heart, Car, Package } from 'lucide-react'
+import { ChevronRight, Heart, Car, Package, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -77,14 +77,23 @@ export default function ProductDetailPage() {
 
       {/* รูปสินค้า */}
       <div className="px-4">
-        <div className="aspect-square overflow-hidden rounded-2xl bg-muted">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
           {activeImage ? (
-            <img src={activeImage} alt={product.name_th} className="size-full object-cover" />
+            <img src={activeImage} alt={product.name_th} className="size-full object-contain" />
           ) : (
             <div className="flex size-full items-center justify-center">
               <Package className="size-16 text-muted-foreground/30" />
             </div>
           )}
+
+          {/* ปุ่มแก้ไขรูป — ไปหน้า admin edit */}
+          <Link
+            to={`/admin/products/${product.id}/edit`}
+            className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/80"
+          >
+            <Pencil className="size-3.5" />
+            แก้ไขรูป
+          </Link>
         </div>
 
         {/* thumbnail strip */}

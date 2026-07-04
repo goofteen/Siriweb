@@ -3,7 +3,7 @@
  * Filter state ผ่าน URL searchParams เพื่อ shareable/bookmarkable
  * Desktop: sidebar filter แสดงตลอด | Mobile: bottom drawer
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Car, X } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -14,6 +14,8 @@ import { FilterPanel } from '@/components/filter/FilterPanel'
 import { VehicleSelector } from '@/components/vehicle/VehicleSelector'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { BrandLogo } from '@/components/vehicle/BrandLogo'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
 import { useSmartSearch, usePopularProducts } from '@/hooks/useProducts'
 import {
   useVehicle,
@@ -200,16 +202,56 @@ export default function SearchPage() {
 
   const sidebarState: FilterState = { categoryId, brand, minPrice, maxPrice, inStock }
 
-  const results = (searchResponse?.results ?? []).map((r) => ({
-    id: r.id,
-    name_th: r.name_th,
-    name_en: r.name_en,
-    brand: r.brand,
-    price: r.price,
-    category_id: r.category_id,
-    product_images: null,
-    product_inventory: null,
-  }))
+  // ดึง images + inventory สำหรับ search results
+  const searchProductIds = useMemo(
+    () => (searchResponse?.results ?? []).map((r) => r.id),
+    [searchResponse]
+  )
+  const { data: productExtras } = useQuery({
+    queryKey: ['search-product-extras', searchProductIds],
+    queryFn: async () => {
+      if (searchProductIds.length === 0) return []
+      const { data } = await supabase
+        .from('products')
+        .select('id, product_images(url, is_primary), product_inventory(quantity)')
+        .in('id', searchProductIds)
+      return data ?? []
+    },
+    enabled: searchProductIds.length > 0,
+    staleTime: 60 * 1000,
+  })
+  const extrasMap = useMemo(() => {
+    const map = new Map<
+      number,
+      {
+        images: { url: string; is_primary: boolean | null }[] | null
+        inventory: { quantity: number }[] | null
+      }
+    >()
+    for (const p of productExtras ?? []) {
+      map.set(p.id, {
+        images: p.product_images as { url: string; is_primary: boolean | null }[] | null,
+        inventory: p.product_inventory
+          ? [p.product_inventory as unknown as { quantity: number }]
+          : null,
+      })
+    }
+    return map
+  }, [productExtras])
+
+  const results = (searchResponse?.results ?? []).map((r) => {
+    const extra = extrasMap.get(r.id)
+    return {
+      id: r.id,
+      name_th: r.name_th,
+      name_en: r.name_en,
+      brand: r.brand,
+      price: r.price,
+      category_id: r.category_id,
+      product_images: extra?.images ?? null,
+      product_inventory: extra?.inventory ?? null,
+    }
+  })
 
   const popularProducts = popularRaw.map((p) => ({
     ...p,
