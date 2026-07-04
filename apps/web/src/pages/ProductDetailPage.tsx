@@ -76,7 +76,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* รูปสินค้า */}
-      <div className="mx-auto max-w-3xl px-4">
+      <div className="mx-auto max-w-4xl px-4">
         <div className="flex gap-3">
           {/* thumbnail strip — ด้านซ้าย */}
           {images.length > 1 && (
