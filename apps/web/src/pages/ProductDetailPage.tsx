@@ -76,56 +76,59 @@ export default function ProductDetailPage() {
       </div>
 
       {/* รูปสินค้า */}
-      <div className="px-4">
-        <div className="relative mx-auto max-h-[480px] max-w-2xl overflow-hidden rounded-2xl bg-muted aspect-[4/3]">
-          {activeImage ? (
-            <img src={activeImage} alt={product.name_th} className="size-full object-contain" />
-          ) : (
-            <div className="flex size-full items-center justify-center">
-              <Package className="size-16 text-muted-foreground/30" />
+      <div className="mx-auto max-w-3xl px-4">
+        <div className="flex gap-3">
+          {/* thumbnail strip — ด้านซ้าย */}
+          {images.length > 1 && (
+            <div className="flex shrink-0 flex-col gap-2 overflow-y-auto max-h-[540px]">
+              {images.map((img, i) => (
+                <button
+                  key={img.id}
+                  onClick={() => setActiveImageIdx(i)}
+                  className={cn(
+                    'aspect-square w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors',
+                    i === activeImageIdx ? 'border-primary' : 'border-border'
+                  )}
+                >
+                  <img src={img.url} alt="" className="size-full object-cover" />
+                </button>
+              ))}
             </div>
           )}
 
-          {/* ปุ่มเปลี่ยนรูป ซ้าย/ขวา */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={() =>
-                  setActiveImageIdx((prev) => (prev - 1 + images.length) % images.length)
-                }
-                className="absolute left-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-                aria-label="รูปก่อนหน้า"
-              >
-                <ChevronLeft className="size-5" />
-              </button>
-              <button
-                onClick={() => setActiveImageIdx((prev) => (prev + 1) % images.length)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
-                aria-label="รูปถัดไป"
-              >
-                <ChevronRight className="size-5" />
-              </button>
-            </>
-          )}
-        </div>
+          {/* รูปหลัก */}
+          <div className="relative flex-1 overflow-hidden rounded-2xl bg-muted aspect-[4/3] max-h-[540px]">
+            {activeImage ? (
+              <img src={activeImage} alt={product.name_th} className="size-full object-contain" />
+            ) : (
+              <div className="flex size-full items-center justify-center">
+                <Package className="size-16 text-muted-foreground/30" />
+              </div>
+            )}
 
-        {/* thumbnail strip */}
-        {images.length > 1 && (
-          <div className="mt-2 flex gap-2 overflow-x-auto">
-            {images.map((img, i) => (
-              <button
-                key={img.id}
-                onClick={() => setActiveImageIdx(i)}
-                className={cn(
-                  'aspect-square w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-colors',
-                  i === activeImageIdx ? 'border-primary' : 'border-border'
-                )}
-              >
-                <img src={img.url} alt="" className="size-full object-cover" />
-              </button>
-            ))}
+            {/* ปุ่มเปลี่ยนรูป ซ้าย/ขวา */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={() =>
+                    setActiveImageIdx((prev) => (prev - 1 + images.length) % images.length)
+                  }
+                  className="absolute left-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                  aria-label="รูปก่อนหน้า"
+                >
+                  <ChevronLeft className="size-5" />
+                </button>
+                <button
+                  onClick={() => setActiveImageIdx((prev) => (prev + 1) % images.length)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                  aria-label="รูปถัดไป"
+                >
+                  <ChevronRight className="size-5" />
+                </button>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* ข้อมูลหลัก */}
