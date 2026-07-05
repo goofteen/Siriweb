@@ -63,10 +63,10 @@ export function ContactStoreSheet({
             sku: productSku,
             price: productPrice,
           })
-          window.open(url, '_blank', 'noopener,noreferrer')
+          window.location.href = url
         } else {
           // fallback ถ้าไม่มีข้อมูลสินค้าครบ
-          window.open(STORE.lineOaUrl, '_blank', 'noopener,noreferrer')
+          window.location.href = STORE.lineOaUrl
         }
         onClose()
       },
