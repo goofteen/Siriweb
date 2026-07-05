@@ -235,6 +235,8 @@ export default function ProductDetailPage() {
         onClose={() => setContactOpen(false)}
         productId={product.id}
         productName={product.name_th}
+        productSku={product.sku}
+        productPrice={product.price}
       />
     </div>
   )

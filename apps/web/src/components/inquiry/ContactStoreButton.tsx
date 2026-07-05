@@ -6,12 +6,17 @@ import { Phone, MessageCircle, ClipboardList } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { STORE } from '@/config/store'
+import { buildLineInquiryUrl } from '@/lib/line'
+import { supabase } from '@/lib/supabase'
+import { useSession } from '@/contexts/SessionContext'
 
 interface ContactStoreButtonProps {
   open: boolean
   onClose: () => void
   productId?: number
   productName?: string
+  productSku?: string
+  productPrice?: number
 }
 
 export function ContactStoreSheet({
@@ -19,22 +24,50 @@ export function ContactStoreSheet({
   onClose,
   productId,
   productName,
+  productSku,
+  productPrice,
 }: ContactStoreButtonProps) {
   const navigate = useNavigate()
+  const { sessionId } = useSession()
 
-  const lineUrl = productName
-    ? `${STORE.lineOaUrl}?text=${encodeURIComponent(`สอบถามสินค้า: ${productName}`)}`
-    : STORE.lineOaUrl
+  // log ลง inquiries แบบ fire-and-forget (ไม่ block การเปิด LINE)
+  function logLineInquiry() {
+    if (!productId) return
+    try {
+      supabase.from('inquiries').insert({
+        session_id: sessionId,
+        customer_name: 'LINE inquiry',
+        message: `สนใจสินค้า: ${productName ?? ''}`,
+        product_ids: [productId],
+        source: 'line_oa',
+        contact_line: 'via LINE OA',
+      })
+    } catch {
+      // ไม่ block — ถ้า log ล้มเหลวก็ไม่เป็นไร
+    }
+  }
 
   const options = [
     {
       icon: MessageCircle,
       label: 'Line OA',
-      sublabel: STORE.lineOaId,
+      sublabel: 'ส่งรายละเอียดสินค้าเข้า LINE เลย',
       color: 'bg-[#06C755] hover:bg-[#05b34d]',
       textColor: 'text-white',
       action: () => {
-        window.open(lineUrl, '_blank', 'noopener,noreferrer')
+        logLineInquiry()
+        if (productId && productName && productSku && productPrice != null) {
+          const url = buildLineInquiryUrl({
+            id: productId,
+            name_th: productName,
+            sku: productSku,
+            price: productPrice,
+          })
+          window.open(url, '_blank', 'noopener,noreferrer')
+        } else {
+          // fallback ถ้าไม่มีข้อมูลสินค้าครบ
+          window.open(STORE.lineOaUrl, '_blank', 'noopener,noreferrer')
+        }
         onClose()
       },
     },
