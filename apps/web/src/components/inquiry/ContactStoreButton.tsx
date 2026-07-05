@@ -1,22 +1,16 @@
 /**
  * ContactStoreSheet — ปุ่ม "ติดต่อสั่งซื้อ" บนหน้าสินค้า
  * เปิด bottom sheet ให้เลือกช่องทาง: Line OA / Messenger / โทร
+ * กดแล้วขึ้น popup แสดงรายละเอียดสินค้าก่อน redirect
  */
 import { useState } from 'react'
 import { Phone, MessageCircle } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { STORE } from '@/config/store'
-import {
-  buildLineInquiryUrl,
-  buildProductMessage,
-  buildLineChatUrl,
-  isMobile,
-  copyToClipboard,
-  type ProductForContact,
-} from '@/lib/contact'
+import { type ProductForContact } from '@/lib/contact'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/contexts/SessionContext'
-import { MessengerInquiryModal } from './MessengerInquiryModal'
+import { ContactInquiryModal, type ContactChannel } from './ContactInquiryModal'
 
 // Facebook icon (ไม่มีใน lucide)
 function FacebookIcon({ className }: { className?: string }) {
@@ -45,9 +39,8 @@ export function ContactStoreSheet({
   productPrice,
 }: ContactStoreButtonProps) {
   const { sessionId } = useSession()
-  const [copied, setCopied] = useState(false)
-  const [messengerOpen, setMessengerOpen] = useState(false)
-  const [messengerAutoCopied, setMessengerAutoCopied] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalChannel, setModalChannel] = useState<ContactChannel>('line')
 
   const product: ProductForContact | null =
     productId && productName && productSku && productPrice != null
@@ -71,33 +64,21 @@ export function ContactStoreSheet({
     }
   }
 
+  function openChannel(channel: ContactChannel) {
+    const source = channel === 'line' ? 'line_oa' : 'messenger'
+    logInquiry(source)
+    setModalChannel(channel)
+    setModalOpen(true)
+  }
+
   const options = [
     {
       icon: MessageCircle,
       label: 'Line OA',
-      sublabel: copied
-        ? 'copy รายละเอียดสินค้าเรียบร้อย วางข้อความที่แชทไลน์ได้เลย'
-        : isMobile()
-          ? 'ส่งรายละเอียดสินค้าเข้า LINE เลย'
-          : 'คัดลอกข้อความ + เปิด LINE แชท',
+      sublabel: 'ส่งรายละเอียดสินค้าเข้า LINE',
       color: 'bg-[#06C755] hover:bg-[#05b34d]',
       textColor: 'text-white',
-      action: async () => {
-        logInquiry('line_oa')
-        if (isMobile()) {
-          window.location.href = product ? buildLineInquiryUrl(product) : STORE.lineOaUrl
-          onClose()
-        } else {
-          if (product) {
-            const message = buildProductMessage(product)
-            await copyToClipboard(message)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
-          }
-          window.open(buildLineChatUrl(), '_blank', 'noopener,noreferrer')
-          setTimeout(() => onClose(), 1500)
-        }
-      },
+      action: () => openChannel('line'),
     },
     {
       icon: FacebookIcon,
@@ -105,17 +86,7 @@ export function ContactStoreSheet({
       sublabel: 'ส่งรายละเอียดสินค้าทาง Messenger',
       color: 'bg-[#0084FF] hover:bg-[#006fd6]',
       textColor: 'text-white',
-      action: async () => {
-        logInquiry('messenger')
-        // copy ทันทีก่อน — สำคัญสำหรับ iOS Safari
-        let autoCopied = false
-        if (product) {
-          const message = buildProductMessage(product)
-          autoCopied = await copyToClipboard(message)
-        }
-        setMessengerAutoCopied(autoCopied)
-        setMessengerOpen(true)
-      },
+      action: () => openChannel('messenger'),
     },
     {
       icon: Phone,
@@ -165,15 +136,15 @@ export function ContactStoreSheet({
         </SheetContent>
       </Sheet>
 
-      {/* Messenger modal */}
-      <MessengerInquiryModal
-        open={messengerOpen}
+      {/* popup แสดงรายละเอียดสินค้า — ใช้ร่วมทั้ง LINE + Messenger */}
+      <ContactInquiryModal
+        open={modalOpen}
         onClose={() => {
-          setMessengerOpen(false)
+          setModalOpen(false)
           onClose()
         }}
         product={product}
-        autoCopied={messengerAutoCopied}
+        channel={modalChannel}
       />
     </>
   )
