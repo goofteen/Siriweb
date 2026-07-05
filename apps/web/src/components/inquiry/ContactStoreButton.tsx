@@ -2,8 +2,7 @@
  * ContactStoreButton — ปุ่ม "ติดต่อสั่งซื้อ" บนหน้าสินค้า
  * เปิด bottom sheet ให้เลือก 3 ช่องทาง: Line OA / โทร / ฟอร์ม
  */
-import { Phone, MessageCircle, ClipboardList } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Phone, MessageCircle } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { STORE } from '@/config/store'
 import { buildLineInquiryUrl } from '@/lib/line'
@@ -27,7 +26,6 @@ export function ContactStoreSheet({
   productSku,
   productPrice,
 }: ContactStoreButtonProps) {
-  const navigate = useNavigate()
   const { sessionId } = useSession()
 
   // log ลง inquiries แบบ fire-and-forget (ไม่ block การเปิด LINE)
@@ -80,19 +78,6 @@ export function ContactStoreSheet({
       action: () => {
         window.location.href = `tel:${STORE.phone.replace(/[-\s]/g, '')}`
         onClose()
-      },
-    },
-    {
-      icon: ClipboardList,
-      label: 'กรอกแบบฟอร์ม',
-      sublabel: 'ส่งคำขอเพื่อให้ร้านติดต่อกลับ',
-      color: 'bg-background hover:bg-accent border border-border',
-      textColor: 'text-foreground',
-      action: () => {
-        onClose()
-        const params = new URLSearchParams()
-        if (productId) params.set('product', String(productId))
-        navigate(`/inquiry?${params.toString()}`)
       },
     },
   ]
