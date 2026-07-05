@@ -52,7 +52,7 @@ export function ContactStoreSheet({
       icon: MessageCircle,
       label: 'Line OA',
       sublabel: copied
-        ? '✓ คัดลอกข้อความแล้ว — วางในแชท LINE ได้เลย'
+        ? 'copy รายละเอียดสินค้าเรียบร้อย วางข้อความที่แชทไลน์ได้เลย'
         : isMobile()
           ? 'ส่งรายละเอียดสินค้าเข้า LINE เลย'
           : 'คัดลอกข้อความ + เปิด LINE แชท',
