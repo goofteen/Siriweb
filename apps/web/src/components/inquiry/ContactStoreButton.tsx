@@ -2,10 +2,11 @@
  * ContactStoreButton — ปุ่ม "ติดต่อสั่งซื้อ" บนหน้าสินค้า
  * เปิด bottom sheet ให้เลือก 3 ช่องทาง: Line OA / โทร / ฟอร์ม
  */
+import { useState } from 'react'
 import { Phone, MessageCircle } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { STORE } from '@/config/store'
-import { buildLineInquiryUrl } from '@/lib/line'
+import { buildLineInquiryUrl, buildLineMessage, buildLineChatUrl, isMobile } from '@/lib/line'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/contexts/SessionContext'
 
@@ -27,6 +28,7 @@ export function ContactStoreSheet({
   productPrice,
 }: ContactStoreButtonProps) {
   const { sessionId } = useSession()
+  const [copied, setCopied] = useState(false)
 
   // log ลง inquiries แบบ fire-and-forget (ไม่ block การเปิด LINE)
   function logLineInquiry() {
@@ -49,24 +51,36 @@ export function ContactStoreSheet({
     {
       icon: MessageCircle,
       label: 'Line OA',
-      sublabel: 'ส่งรายละเอียดสินค้าเข้า LINE เลย',
+      sublabel: copied
+        ? '✓ คัดลอกข้อความแล้ว — วางในแชท LINE ได้เลย'
+        : isMobile()
+          ? 'ส่งรายละเอียดสินค้าเข้า LINE เลย'
+          : 'คัดลอกข้อความ + เปิด LINE แชท',
       color: 'bg-[#06C755] hover:bg-[#05b34d]',
       textColor: 'text-white',
-      action: () => {
+      action: async () => {
         logLineInquiry()
-        if (productId && productName && productSku && productPrice != null) {
-          const url = buildLineInquiryUrl({
-            id: productId,
-            name_th: productName,
-            sku: productSku,
-            price: productPrice,
-          })
-          window.location.href = url
+        const hasProduct = productId && productName && productSku && productPrice != null
+        const product = hasProduct
+          ? { id: productId, name_th: productName, sku: productSku, price: productPrice }
+          : null
+
+        if (isMobile()) {
+          // มือถือ: เปิดแอป LINE พร้อมข้อความ prefill
+          window.location.href = product ? buildLineInquiryUrl(product) : STORE.lineOaUrl
+          onClose()
         } else {
-          // fallback ถ้าไม่มีข้อมูลสินค้าครบ
-          window.location.href = STORE.lineOaUrl
+          // Desktop: copy ข้อความ แล้วเปิด LINE แชท
+          if (product) {
+            const message = buildLineMessage(product)
+            await navigator.clipboard.writeText(message)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+          }
+          window.open(buildLineChatUrl(), '_blank', 'noopener,noreferrer')
+          // ไม่ปิด sheet ทันทีบน desktop เพื่อให้เห็น "คัดลอกแล้ว"
+          setTimeout(() => onClose(), 1500)
         }
-        onClose()
       },
     },
     {
