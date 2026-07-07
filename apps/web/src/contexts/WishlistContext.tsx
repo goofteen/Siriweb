@@ -68,7 +68,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [sessionId])
+  }, [supabase, sessionId])
 
   const isInWishlist = useCallback(
     (productId: number) => items.some((i) => i.productId === productId),
@@ -112,7 +112,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         )
       )
     },
-    [sessionId]
+    [supabase, sessionId]
   )
 
   const removeFromWishlist = useCallback(
@@ -134,7 +134,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         setItems((prev) => [item, ...prev])
       }
     },
-    [items, sessionId]
+    [supabase, items, sessionId]
   )
 
   const toggleWishlist = useCallback(
