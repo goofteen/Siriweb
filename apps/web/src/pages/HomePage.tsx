@@ -89,7 +89,7 @@ export default function HomePage() {
         `/search?vehicle_brand=${encodeURIComponent(brand)}&vehicle_model=${encodeURIComponent(model)}`
       )
     } else if (brand) {
-      navigate(`/search?q=${encodeURIComponent(brand)}`)
+      navigate(`/search?vehicle_brand=${encodeURIComponent(brand)}`)
     } else {
       // ไม่เลือกอะไรเลย → แสดงสินค้าทั้งหมด
       navigate('/search')
