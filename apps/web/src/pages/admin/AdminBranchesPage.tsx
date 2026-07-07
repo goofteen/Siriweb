@@ -25,8 +25,7 @@ export default function AdminBranchesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-branches'],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('branches')
         .select('id, name, code, sort_order, is_active')
         .eq('is_active', true)
@@ -42,8 +41,7 @@ export default function AdminBranchesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('branches').delete().eq('id', id)
+      const { error } = await supabase.from('branches').delete().eq('id', id)
       if (error) throw error
     },
     onSuccess: () => {
@@ -57,8 +55,7 @@ export default function AdminBranchesPage() {
     const code = quickCode.trim().toUpperCase()
     if (!name || !code) return
     setQuickSaving(true)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('branches')
       .insert({ name, code, is_active: true, sort_order: 0 })
     if (error) {

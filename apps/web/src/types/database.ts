@@ -33,6 +33,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      banners: {
+        Row: {
+          created_at: string
+          id: number
+          image_url: string
+          is_active: boolean
+          link_url: string | null
+          sort_order: number
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          image_url: string
+          is_active?: boolean
+          link_url?: string | null
+          sort_order?: number
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          image_url?: string
+          is_active?: boolean
+          link_url?: string | null
+          sort_order?: number
+          title?: string | null
+        }
+        Relationships: []
+      }
+      branches: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       inquiries: {
         Row: {
           admin_notes: string | null
@@ -209,6 +266,49 @@ export type Database = {
             foreignKeyName: 'product_inventory_product_id_fkey'
             columns: ['product_id']
             isOneToOne: true
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      product_inventory_branches: {
+        Row: {
+          branch_id: number
+          last_updated: string | null
+          product_id: number
+          quantity: number
+        }
+        Insert: {
+          branch_id: number
+          last_updated?: string | null
+          product_id: number
+          quantity?: number
+        }
+        Update: {
+          branch_id?: number
+          last_updated?: string | null
+          product_id?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_inventory_branches_branch_id_fkey'
+            columns: ['branch_id']
+            isOneToOne: false
+            referencedRelation: 'branches'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'product_inventory_branches_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'product_availability'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'product_inventory_branches_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
             referencedRelation: 'products'
             referencedColumns: ['id']
           },
@@ -515,6 +615,10 @@ export type Database = {
       }
     }
     Functions: {
+      all_words_match: {
+        Args: { query: string; search_text: string }
+        Returns: boolean
+      }
       expand_query_with_synonyms: {
         Args: { input_query: string }
         Returns: string

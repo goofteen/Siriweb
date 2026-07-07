@@ -31,12 +31,10 @@ export default function HomePage() {
   const [showOtherVehicle, setShowOtherVehicle] = useState(false)
 
   // banner carousel
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: banners = [] } = useQuery<BannerData[]>({
     queryKey: ['home-banners'],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('banners')
         .select('id, title, image_url, link_url')
         .eq('is_active', true)

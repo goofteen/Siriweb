@@ -29,11 +29,7 @@ export default function AdminBannersPage() {
   const { data: banners = [], isLoading } = useQuery<Banner[]>({
     queryKey: ['admin-banners'],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('banners')
-        .select('*')
-        .order('sort_order')
+      const { data, error } = await supabase.from('banners').select('*').order('sort_order')
       if (error) throw error
       return (data ?? []) as Banner[]
     },
@@ -60,8 +56,7 @@ export default function AdminBannersPage() {
     if (!newImageUrl.trim()) return
     setSaving(true)
     const maxSort = banners.length > 0 ? Math.max(...banners.map((b) => b.sort_order)) + 1 : 0
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any).from('banners').insert({
+    const { error } = await supabase.from('banners').insert({
       title: newTitle.trim() || null,
       image_url: newImageUrl.trim(),
       link_url: newLink.trim() || null,
@@ -82,14 +77,12 @@ export default function AdminBannersPage() {
 
   async function handleDelete(id: number) {
     if (!confirm('ลบ banner นี้?')) return
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from('banners').delete().eq('id', id)
+    await supabase.from('banners').delete().eq('id', id)
     queryClient.invalidateQueries({ queryKey: ['admin-banners'] })
   }
 
   async function handleToggle(id: number, current: boolean) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from('banners').update({ is_active: !current }).eq('id', id)
+    await supabase.from('banners').update({ is_active: !current }).eq('id', id)
     queryClient.invalidateQueries({ queryKey: ['admin-banners'] })
   }
 
@@ -98,7 +91,6 @@ export default function AdminBannersPage() {
     const items = [...banners]
     const prev = items[idx - 1]
     const curr = items[idx]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
     await Promise.all([
       sb.from('banners').update({ sort_order: curr.sort_order }).eq('id', prev.id),
@@ -112,7 +104,6 @@ export default function AdminBannersPage() {
     const items = [...banners]
     const next = items[idx + 1]
     const curr = items[idx]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
     await Promise.all([
       sb.from('banners').update({ sort_order: curr.sort_order }).eq('id', next.id),

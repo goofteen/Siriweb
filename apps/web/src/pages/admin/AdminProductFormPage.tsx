@@ -181,8 +181,7 @@ export default function AdminProductFormPage() {
   const { data: branches = [] as Branch[] } = useQuery<Branch[]>({
     queryKey: ['admin-branches'],
     queryFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('branches')
         .select('id, name, code, sort_order')
         .eq('is_active', true)
@@ -216,23 +215,24 @@ export default function AdminProductFormPage() {
         })
         // SKU ของสินค้าที่กำลัง edit ไม่นับว่าซ้ำ
         setSkuStatus('idle')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const inv = data.product_inventory as any
+        const inv = data.product_inventory as { quantity: number } | null
         setQuantity(String(inv?.quantity ?? 0))
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const imgs = (data.product_images as any[]) ?? []
+        const imgs =
+          (data.product_images as {
+            url: string
+            sort_order: number | null
+            is_primary: boolean | null
+          }[]) ?? []
         const sorted = imgs.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
         setImageUrls(sorted.length > 0 ? sorted.map((i) => i.url) : [''])
       })
 
     // load branch inventory
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(supabase as any)
+    supabase
       .from('product_inventory_branches')
       .select('branch_id, quantity')
       .eq('product_id', Number(id))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then(({ data }: { data: any[] | null }) => {
+      .then(({ data }) => {
         if (!data) return
         const map: Record<number, string> = {}
         data.forEach((row) => {
@@ -248,7 +248,6 @@ export default function AdminProductFormPage() {
       .eq('product_id', Number(id))
       .then(({ data }) => {
         if (!data) return
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const vehicles = (data as any[]).map((row) => row.vehicles).filter(Boolean) as Vehicle[]
         setSelectedVehicles(vehicles)
       })
@@ -414,11 +413,7 @@ export default function AdminProductFormPage() {
 
     // save branch inventory
     if (productId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
-        .from('product_inventory_branches')
-        .delete()
-        .eq('product_id', productId)
+      await supabase.from('product_inventory_branches').delete().eq('product_id', productId)
       const branchRows = Object.entries(branchInventory)
         .filter(([, v]) => v.trim() !== '' && !isNaN(Number(v)))
         .map(([branchId, v]) => ({
@@ -428,8 +423,7 @@ export default function AdminProductFormPage() {
           last_updated: new Date().toISOString(),
         }))
       if (branchRows.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).from('product_inventory_branches').insert(branchRows)
+        await supabase.from('product_inventory_branches').insert(branchRows)
       }
     }
 
